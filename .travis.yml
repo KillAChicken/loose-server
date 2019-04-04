@@ -1,0 +1,14 @@
+language: python
+python:
+  - "3.5"
+
+install:
+  - pip install flask flask-restful requests pytest pytest-cov pylint
+
+before_script:
+  - export PYTHONPATH=$PYTHONPATH:$(pwd)/src
+  - export LOOSESERVERPATH=$(pwd)/src/looseserver
+  - cd tests
+
+script:
+  - py.test --cov $LOOSESERVERPATH --cov-report term-missing --cov-branch test_looseserver
