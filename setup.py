@@ -17,7 +17,7 @@ if __name__ == "__main__":
         long_description=long_description,
         long_description_content_type="text/markdown",
         url="https://github.com/KillAChicken/loose-server",
-        packages=setuptools.find_packages(include=("looseserver", )),
+        packages=setuptools.find_packages(include=("looseserver*", )),
         classifiers=[
             "License :: OSI Approved :: MIT License",
             "Operating System :: OS Independent",
