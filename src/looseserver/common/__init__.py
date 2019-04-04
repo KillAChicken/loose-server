@@ -1,0 +1,1 @@
+"""Package with common components."""
