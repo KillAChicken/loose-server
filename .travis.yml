@@ -4,9 +4,9 @@ python:
 
 install:
   - pip install flask flask-restful requests pytest pytest-cov pylint
+  - pip install .
 
 before_script:
-  - export PYTHONPATH=$PYTHONPATH:$(pwd)
   - export LOOSESERVERPATH=$(pwd)/looseserver
   - cd tests
 
