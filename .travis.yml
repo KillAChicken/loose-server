@@ -4,7 +4,7 @@ python:
 
 install:
   - pip install flask flask-restful requests pytest pytest-cov pylint
-  - pip install .
+  - pip install --editable .
 
 before_script:
   - export LOOSESERVERPATH=$(pwd)/looseserver
