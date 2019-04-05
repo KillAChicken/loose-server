@@ -5,6 +5,20 @@ loose-server
 
 Loose server is a simple configurable server. It can be used to create temporary servers, dynamically add or remove endpoints and set responses for them from an application.
 
+Installation
+============
+``Flask`` and ``flask-restful`` are required for the server.
+
+.. code-block:: text
+
+    $ python -m pip install Flask flask-restful loose-server
+
+``requests`` are required for the http client.
+
+.. code-block:: text
+
+    $ python -m pip install requests loose-server
+
 Usage
 =====
 Loose server has 2 variations:
@@ -14,28 +28,42 @@ Loose server has 2 variations:
 
 Standalone server
 -----------------
-A server can be started by the command::
+A server can be started by the command
 
-  $ python -m looseserver.server.run
-   * Serving Flask app "run" (lazy loading)
-   * Environment: production
-     WARNING: Do not use the development server in a production environment.
-     Use a production WSGI server instead.
-   * Debug mode: off
-   * Running on http://127.0.0.1:50000/ (Press CTRL+C to quit)
+.. code-block:: text
 
-All configurable endpoint have a common prefix. By default it is ``/routes/``::
+    $ python -m looseserver.server.run
+     * Serving Flask app "run" (lazy loading)
+     * Environment: production
+       WARNING: Do not use the development server in a production environment.
+       Use a production WSGI server instead.
+     * Debug mode: off
+     * Running on http://127.0.0.1:50000/ (Press CTRL+C to quit)
 
-  >>> from looseserver.client.http import HTTPClient
-  >>> from looseserver.default.client.rule import PathRule
-  >>> from looseserver.default.client.response import FixedResponse
-  >>> client = HTTPClient(base_url="http://127.0.0.1:50000/_configuration/")
-  >>> path_rule_spec = PathRule(path="example")
-  >>> path_rule = client.create_rule(rule=path_rule_spec)
-  >>> json_response = FixedResponse(status=200, headers={"Content-Type": "application/json"}, body='{"key": "value"}')
-  >>> client.set_response(rule_id=path_rule.rule_id, response=json_response)
+API endpoints are nested to the base configuration url. By default it is ``/_configuration/``.
 
-The response can be obtained by the following response::
+.. code-block:: python
+
+    from looseserver.client.http import HTTPClient
+    from looseserver.default.client.rule import PathRule
+    from looseserver.default.client.response import FixedResponse
+
+    client = HTTPClient(base_url="http://127.0.0.1:50000/_configuration/")
+
+    path_rule_spec = PathRule(path="example")
+    path_rule = client.create_rule(rule=path_rule_spec)
+
+    json_response = FixedResponse(
+        status=200,
+        headers={"Content-Type": "application/json"},
+        body='{"key": "value"}',
+        )
+    client.set_response(rule_id=path_rule.rule_id, response=json_response)
+
+All configured endpoints have a common prefix. By default it is ``/routes/``.
+The response can be obtained by the following request
+
+.. code-block:: text
 
   $ curl http://127.0.0.1:50000/routes/example -i
   HTTP/1.0 200 OK
@@ -50,18 +78,32 @@ Configurable mock
 -----------------
 Loose server can be used as a mock server in the following way
 
-  >>> from looseserver.server.run import configure_application
-  >>> from looseserver.client.flask import FlaskClient
-  >>> from looseserver.default.client.rule import PathRule
-  >>> from looseserver.default.client.response import FixedResponse
-  >>> application = configure_application(base_endpoint="/routes/", configuration_endpoint="/_configuration/")
-  >>> client = FlaskClient(base_url="/_configuration/", application_client=application.test_client())
-  >>> path_rule_spec = PathRule(path="example")
-  >>> path_rule = client.create_rule(rule=path_rule_spec)
-  >>> json_response = FixedResponse(status=200, headers={"Content-Type": "application/json"}, body='{"key": "value"}')
-  >>> client.set_response(rule_id=path_rule.rule_id, response=json_response)
-  >>> response = application.test_client().get("/routes/example")
-  >>> response.headers
-  Headers([('Content-Type', 'application/json'), ('Content-Length', '16')])
-  >>> response.json
-  {'key': 'value'}
+.. code-block:: python
+
+    from looseserver.server.run import configure_application
+    from looseserver.client.flask import FlaskClient
+    from looseserver.default.client.rule import PathRule
+    from looseserver.default.client.response import FixedResponse
+
+    application = configure_application(
+        base_endpoint="/routes/",
+        configuration_endpoint="/_configuration/",
+        )
+
+    app_client=application.test_client()
+
+    client = FlaskClient(base_url="/_configuration/", application_client=app_client)
+
+    path_rule_spec = PathRule(path="example")
+    path_rule = client.create_rule(rule=path_rule_spec)
+
+    json_response = FixedResponse(
+        status=200,
+        headers={"Content-Type": "application/json"},
+        body='{"key": "value"}',
+        )
+    client.set_response(rule_id=path_rule.rule_id, response=json_response)
+
+    response = app_client.get("/routes/example")
+    assert response.headers["Content-Type"] == "application/json"
+    assert response.json == {'key': 'value'}
