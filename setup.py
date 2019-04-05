@@ -4,7 +4,7 @@ import setuptools
 
 if __name__ == "__main__":
     dir_path = os.path.dirname(__file__)
-    readme_path = os.path.abspath(os.path.join(dir_path, "README.md"))
+    readme_path = os.path.abspath(os.path.join(dir_path, "README.rst"))
     with open(readme_path) as readme_file:
         long_description = readme_file.read()
 
