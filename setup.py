@@ -10,12 +10,11 @@ if __name__ == "__main__":
 
     setuptools.setup(
         name="loose-server",
-        version="0.1",
+        version="0.2",
         author="KillAChicken",
         author_email="KillAChicken@yandex.ru",
         description="Dynamically configurable server",
         long_description=long_description,
-        long_description_content_type="text/markdown",
         url="https://github.com/KillAChicken/loose-server",
         packages=setuptools.find_packages(include=("looseserver*", )),
         classifiers=[
