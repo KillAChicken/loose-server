@@ -45,7 +45,7 @@ class RuleFactoryPreparator:
             """
             try:
                 path = rule.path
-            except (TypeError, AttributeError) as error:
+            except AttributeError as error:
                 raise RuleSerializeError("Path rule must have path attribute") from error
 
             return {
@@ -88,7 +88,7 @@ class RuleFactoryPreparator:
             """
             try:
                 method = rule.method
-            except (TypeError, AttributeError) as error:
+            except AttributeError as error:
                 raise RuleSerializeError("Method rule must have method attribute") from error
 
             return {
@@ -133,7 +133,7 @@ class RuleFactoryPreparator:
             """
             try:
                 children = rule.children
-            except (TypeError, AttributeError) as error:
+            except AttributeError as error:
                 raise RuleSerializeError("Composite rule must have children attribute") from error
 
             children_data = [self._rule_factory.serialize_rule(rule) for rule in children]
@@ -196,7 +196,7 @@ class ResponseFactoryPreparator:
                 body = response.body
                 status = response.status
                 headers = response.headers
-            except (TypeError, AttributeError) as error:
+            except AttributeError as error:
                 message = "Response must have attributes 'body', 'status' and 'headers'"
                 raise ResponseSerializeError(message) from error
 
