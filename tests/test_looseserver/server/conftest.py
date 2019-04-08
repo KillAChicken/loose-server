@@ -2,6 +2,8 @@
 
 import pytest
 
+from looseserver.common.rule import RuleFactory
+from looseserver.common.response import ResponseFactory
 from looseserver.server.core import Manager
 from looseserver.server.rule import ServerRule
 from looseserver.server.response import ServerResponse
@@ -25,6 +27,18 @@ def configuration_endpoint():
 def core_manager(base_endpoint):
     """Core manager."""
     return Manager(base=base_endpoint)
+
+
+@pytest.fixture
+def rule_factory():
+    """Rule factory."""
+    return RuleFactory()
+
+
+@pytest.fixture
+def response_factory():
+    """Response factory."""
+    return ResponseFactory()
 
 
 @pytest.fixture
