@@ -39,7 +39,7 @@ def test_default_rule_factory():
     assert http_response.json["data"]["rule_id"] is not None, "Response does not contain rule ID"
 
 
-def test_rule_factory(rule_prototype):
+def test_rule_factory(server_rule_prototype):
     """Check that custom rule factory is used when specified.
 
     1. Create rule factory.
@@ -52,7 +52,7 @@ def test_rule_factory(rule_prototype):
     application = configure_application(rule_factory=rule_factory)
 
     rule_type = "".join(random.choice(string.ascii_uppercase) for _ in range(10))
-    rule = rule_prototype.create_new(rule_type=rule_type)
+    rule = server_rule_prototype.create_new(rule_type=rule_type)
 
     rule_factory.register_rule(
         rule_type=rule_type,

@@ -34,7 +34,7 @@ def test_set_response(
         core_manager,
         response_endpoint,
         response_factory,
-        rule_prototype,
+        server_rule_prototype,
         registered_response_prototype,
         application_client,
     ):
@@ -45,7 +45,7 @@ def test_set_response(
     2. Make a POST request to set a response for the rule.
     3. Check that response is set.
     """
-    rule_id = core_manager.add_rule(rule_prototype)
+    rule_id = core_manager.add_rule(server_rule_prototype)
 
     serialized_response = response_factory.serialize_response(registered_response_prototype)
     http_response = application_client.post(
@@ -66,7 +66,7 @@ def test_set_response(
 def test_request_data_error(
         core_manager,
         response_endpoint,
-        rule_prototype,
+        server_rule_prototype,
         application_client,
         data,
     ):
@@ -78,7 +78,7 @@ def test_request_data_error(
     4. Check the error.
     5. Check that response has not been set.
     """
-    rule_id = core_manager.add_rule(rule_prototype)
+    rule_id = core_manager.add_rule(server_rule_prototype)
 
     http_response = application_client.post(
         response_endpoint.format(rule_id=rule_id),
@@ -98,7 +98,7 @@ def test_parse_failed_parse_error(
         core_manager,
         response_endpoint,
         response_factory,
-        rule_prototype,
+        server_rule_prototype,
         application_client,
     ):
     """Check that error is returned if ResponseParseError is raised on attempt to parse data.
@@ -109,7 +109,7 @@ def test_parse_failed_parse_error(
     4. Check the error.
     5. Check that response has not been set.
     """
-    rule_id = core_manager.add_rule(rule_prototype)
+    rule_id = core_manager.add_rule(server_rule_prototype)
 
     response_data = {}
     http_response = application_client.post(
@@ -138,8 +138,8 @@ def test_parse_failed_unknown_error(
         core_manager,
         response_endpoint,
         response_factory,
-        rule_prototype,
-        response_prototype,
+        server_rule_prototype,
+        server_response_prototype,
         application_client,
     ):
     # pylint: disable=too-many-arguments
@@ -152,14 +152,14 @@ def test_parse_failed_unknown_error(
     5. Check the error.
     6. Check that response has not been set.
     """
-    rule_id = core_manager.add_rule(rule_prototype)
+    rule_id = core_manager.add_rule(server_rule_prototype)
 
     def _parser(*args, **kwargs):
         raise ResponseError()
 
     serializer = lambda response_type, response: response_type
 
-    response = response_prototype.create_new(response_type="RuleError")
+    response = server_response_prototype.create_new(response_type="RuleError")
     response_factory.register_response(
         response_type=response.response_type,
         parser=_parser,
@@ -185,8 +185,8 @@ def test_set_response_serialization_failed(
         core_manager,
         response_endpoint,
         response_factory,
-        rule_prototype,
-        response_prototype,
+        server_rule_prototype,
+        server_response_prototype,
         application_client,
     ):
     # pylint: disable=too-many-arguments
@@ -199,9 +199,9 @@ def test_set_response_serialization_failed(
     5. Check the error.
     6. Check that response has not been set.
     """
-    rule_id = core_manager.add_rule(rule_prototype)
+    rule_id = core_manager.add_rule(server_rule_prototype)
 
-    parser = lambda response_type, response_data: response_prototype
+    parser = lambda response_type, response_data: server_response_prototype
 
     def _serializer(*args, **kwargs):
         raise ResponseError()
@@ -235,7 +235,7 @@ def test_set_response_non_existent_rule(
         core_manager,
         response_endpoint,
         response_factory,
-        rule_prototype,
+        server_rule_prototype,
         registered_response_prototype,
         application_client,
     ):
@@ -247,7 +247,7 @@ def test_set_response_non_existent_rule(
     3. Check that response contains an error.
     4. Check the error.
     """
-    core_manager.add_rule(rule_prototype)
+    core_manager.add_rule(server_rule_prototype)
 
     serialized_response = response_factory.serialize_response(registered_response_prototype)
     http_response = application_client.post(
@@ -265,7 +265,7 @@ def test_get_response(
         core_manager,
         response_endpoint,
         response_factory,
-        rule_prototype,
+        server_rule_prototype,
         registered_response_prototype,
         application_client,
     ):
@@ -277,7 +277,7 @@ def test_get_response(
     2. Make a GET request to get a response.
     3. Check that response is obtained.
     """
-    rule_id = core_manager.add_rule(rule_prototype)
+    rule_id = core_manager.add_rule(server_rule_prototype)
     core_manager.set_response(rule_id=rule_id, response=registered_response_prototype)
 
     http_response = application_client.get(response_endpoint.format(rule_id=rule_id))
@@ -290,7 +290,7 @@ def test_get_response(
 def test_get_response_non_existent_rule(
         core_manager,
         response_endpoint,
-        rule_prototype,
+        server_rule_prototype,
         application_client,
     ):
     """Check that error is returned on attempt to get response for a non-existent rule.
@@ -300,7 +300,7 @@ def test_get_response_non_existent_rule(
     3. Check that response contains an error.
     4. Check the error.
     """
-    core_manager.add_rule(rule_prototype)
+    core_manager.add_rule(server_rule_prototype)
 
     http_response = application_client.get(response_endpoint.format(rule_id="FakeID"))
 
@@ -314,8 +314,8 @@ def test_get_response_serialization_failed(
         core_manager,
         response_endpoint,
         response_factory,
-        rule_prototype,
-        response_prototype,
+        server_rule_prototype,
+        server_response_prototype,
         application_client,
     ):
     # pylint: disable=too-many-arguments
@@ -328,11 +328,11 @@ def test_get_response_serialization_failed(
     5. Check that response contains an error.
     6. Check the error.
     """
-    rule_id = core_manager.add_rule(rule_prototype)
-    response = response_prototype.create_new(response_type="ResponseError")
+    rule_id = core_manager.add_rule(server_rule_prototype)
+    response = server_response_prototype.create_new(response_type="ResponseError")
     core_manager.set_response(rule_id=rule_id, response=response)
 
-    parser = lambda response_type, response_data: response_prototype
+    parser = lambda response_type, response_data: server_response_prototype
 
     def _serializer(*args, **kwargs):
         raise ResponseError()

@@ -114,7 +114,7 @@ def test_parse_failed_unknown_error(
         core_manager,
         rules_manager_endpoint,
         rule_factory,
-        rule_prototype,
+        server_rule_prototype,
         application_client,
     ):
     """Check that error is returned if RuleError is raised on attempt to parse data.
@@ -131,7 +131,7 @@ def test_parse_failed_unknown_error(
     serializer = lambda rule_type, rule: rule_type
 
     rule_factory.register_rule(rule_type="RuleError", parser=_parser, serializer=serializer)
-    rule = rule_prototype.create_new(rule_type="RuleError")
+    rule = server_rule_prototype.create_new(rule_type="RuleError")
     serialized_rule = rule_factory.serialize_rule(rule=rule)
 
     http_response = application_client.post(rules_manager_endpoint, json=serialized_rule)
@@ -147,7 +147,7 @@ def test_serialization_failed_unknown_error(
         core_manager,
         rules_manager_endpoint,
         rule_factory,
-        rule_prototype,
+        server_rule_prototype,
         application_client,
     ):
     """Check that error is returned if RuleError is raised on attempt to serialize a rule.
@@ -158,7 +158,7 @@ def test_serialization_failed_unknown_error(
     4. Check the error.
     5. Check that rule has not been created.
     """
-    parser = lambda rule_type, rule_data: rule_prototype
+    parser = lambda rule_type, rule_data: server_rule_prototype
 
     def _serializer(*args, **kwargs):
         raise RuleError()

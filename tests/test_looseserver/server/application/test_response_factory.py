@@ -53,7 +53,7 @@ def test_default_response_factory():
     assert client.put(DEFAULT_BASE_ENDPOINT).data == b"body"
 
 
-def test_response_factory(response_prototype):
+def test_response_factory(server_response_prototype):
     """Check that custom response factory is used when specified.
 
     1. Create a response factory.
@@ -85,7 +85,7 @@ def test_response_factory(response_prototype):
     rule_id = http_response.json["data"]["rule_id"]
 
     response_type = "".join(random.choice(string.ascii_uppercase) for _ in range(10))
-    response = response_prototype.create_new(
+    response = server_response_prototype.create_new(
         response_type=response_type,
         builder_implementation=lambda *args, **kwargs: b"body",
         )

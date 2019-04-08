@@ -79,7 +79,7 @@ def test_serialization_failed_unknown_error(
         core_manager,
         rule_endpoint,
         rule_factory,
-        rule_prototype,
+        server_rule_prototype,
         application_client,
     ):
     """Check that error is returned if RuleError is raised on attempt to serialize a rule.
@@ -90,12 +90,12 @@ def test_serialization_failed_unknown_error(
     4. Check that response contains an error.
     5. Check the error.
     """
-    parser = lambda rule_type, rule_data: rule_prototype
+    parser = lambda rule_type, rule_data: server_rule_prototype
 
     def _serializer(*args, **kwargs):
         raise RuleError()
 
-    rule = rule_prototype.create_new(rule_type="RuleError")
+    rule = server_rule_prototype.create_new(rule_type="RuleError")
     rule_factory.register_rule(rule_type=rule.rule_type, parser=parser, serializer=_serializer)
 
     rule_id = core_manager.add_rule(rule=rule)

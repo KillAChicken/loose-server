@@ -1,7 +1,13 @@
 """Tests for the view provided by the core manager."""
 
 
-def test_view(base_endpoint, core_manager, http_client, rule_prototype, response_prototype):
+def test_view(
+        base_endpoint,
+        core_manager,
+        http_client,
+        server_rule_prototype,
+        server_response_prototype,
+    ):
     """Check configured response.
 
     1. Create a rule that is triggered for every endpoint.
@@ -9,9 +15,9 @@ def test_view(base_endpoint, core_manager, http_client, rule_prototype, response
     3. Make a request.
     4. Check that the configured response was returned.
     """
-    rule = rule_prototype.create_new(match_implementation=lambda *args, **kwargs: True)
+    rule = server_rule_prototype.create_new(match_implementation=lambda *args, **kwargs: True)
 
-    response = response_prototype.create_new(
+    response = server_response_prototype.create_new(
         builder_implementation=lambda *args, **kwargs: b"test body"
         )
 
@@ -28,8 +34,8 @@ def test_reset_response(
         base_endpoint,
         core_manager,
         http_client,
-        rule_prototype,
-        response_prototype,
+        server_rule_prototype,
+        server_response_prototype,
     ):
     """Check that response for a rule can be changed.
 
@@ -39,7 +45,7 @@ def test_reset_response(
     4. Make a request.
     5. Check that new response is returned.
     """
-    rule = rule_prototype.create_new(match_implementation=lambda *args, **kwargs: True)
+    rule = server_rule_prototype.create_new(match_implementation=lambda *args, **kwargs: True)
     rule_id = core_manager.add_rule(rule=rule)
 
     initial_implementation_triggered = False
@@ -49,13 +55,13 @@ def test_reset_response(
         initial_implementation_triggered = True
         return b"First response"
 
-    first_response = response_prototype.create_new(
+    first_response = server_response_prototype.create_new(
         builder_implementation=_initial_builder_implementation,
         )
 
     core_manager.set_response(rule_id=rule_id, response=first_response)
 
-    second_response = response_prototype.create_new(
+    second_response = server_response_prototype.create_new(
         builder_implementation=lambda *args, **kwargs: b"Second response",
         )
 
@@ -68,7 +74,13 @@ def test_reset_response(
     assert http_response.data == b"Second response", "Wrong body"
 
 
-def test_second_rule(base_endpoint, core_manager, http_client, rule_prototype, response_prototype):
+def test_second_rule(
+        base_endpoint,
+        core_manager,
+        http_client,
+        server_rule_prototype,
+        server_response_prototype,
+    ):
     """Check that rule can be triggered if no match has been found by other rules.
 
     1. Create a rule, that does not find match for any request.
@@ -84,18 +96,18 @@ def test_second_rule(base_endpoint, core_manager, http_client, rule_prototype, r
         implementation_triggered = True
         return False
 
-    no_match_rule = rule_prototype.create_new(match_implementation=_no_match_implementation)
+    no_match_rule = server_rule_prototype.create_new(match_implementation=_no_match_implementation)
     no_match_rule_id = core_manager.add_rule(rule=no_match_rule)
 
-    match_rule = rule_prototype.create_new(match_implementation=lambda *args, **kwargs: True)
+    match_rule = server_rule_prototype.create_new(match_implementation=lambda *args, **kwargs: True)
     match_rule_id = core_manager.add_rule(rule=match_rule)
 
-    no_match_response = response_prototype.create_new(
+    no_match_response = server_response_prototype.create_new(
         builder_implementation=lambda *args, **kwargs: b"No match response",
         )
     core_manager.set_response(rule_id=no_match_rule_id, response=no_match_response)
 
-    match_response = response_prototype.create_new(
+    match_response = server_response_prototype.create_new(
         builder_implementation=lambda *args, **kwargs: b"Match response",
         )
     core_manager.set_response(rule_id=match_rule_id, response=match_response)
@@ -121,8 +133,8 @@ def test_no_matching_rule(
         base_endpoint,
         core_manager,
         http_client,
-        rule_prototype,
-        response_prototype,
+        server_rule_prototype,
+        server_response_prototype,
     ):
     """Check that 404 status is returned if there is no rule matching the request.
 
@@ -131,17 +143,25 @@ def test_no_matching_rule(
     3. Make a request.
     4. Check that 404 status is returned.
     """
-    rule = rule_prototype.create_new(match_implementation=lambda *args, **kwargs: False)
+    rule = server_rule_prototype.create_new(match_implementation=lambda *args, **kwargs: False)
     rule_id = core_manager.add_rule(rule=rule)
 
-    response = response_prototype.create_new(builder_implementation=lambda *args, **kwargs: b"")
+    response = server_response_prototype.create_new(
+        builder_implementation=lambda *args, **kwargs: b"",
+        )
     core_manager.set_response(rule_id=rule_id, response=response)
 
     http_response = http_client.get(base_endpoint)
     assert http_response.status_code == 404, "Wrong response status"
 
 
-def test_no_response(base_endpoint, core_manager, http_client, rule_prototype, response_prototype):
+def test_no_response(
+        base_endpoint,
+        core_manager,
+        http_client,
+        server_rule_prototype,
+        server_response_prototype,
+    ):
     """Check that rule is skipped if no response is configured for it.
 
     1. Create 2 rules, matching every request.
@@ -149,11 +169,11 @@ def test_no_response(base_endpoint, core_manager, http_client, rule_prototype, r
     3. Make a request.
     4. Check that response is succesfully obtained.
     """
-    rule = rule_prototype.create_new(match_implementation=lambda *args, **kwargs: True)
+    rule = server_rule_prototype.create_new(match_implementation=lambda *args, **kwargs: True)
     core_manager.add_rule(rule=rule)
     second_rule_id = core_manager.add_rule(rule=rule)
 
-    response = response_prototype.create_new(
+    response = server_response_prototype.create_new(
         builder_implementation=lambda *args, **kwargs: b"Response",
         )
     core_manager.set_response(rule_id=second_rule_id, response=response)
@@ -168,8 +188,8 @@ def test_exception_in_matching(
         base_endpoint,
         core_manager,
         http_client,
-        rule_prototype,
-        response_prototype,
+        server_rule_prototype,
+        server_response_prototype,
     ):
     """Check that rule is skipped if exception is raised on attempt to match.
 
@@ -186,22 +206,22 @@ def test_exception_in_matching(
         implementation_triggered = True
         raise NotImplementedError()
 
-    exceptional_rule = rule_prototype.create_new(
+    exceptional_rule = server_rule_prototype.create_new(
         match_implementation=_exceptional_match_implementation,
         )
     exceptional_rule_id = core_manager.add_rule(rule=exceptional_rule)
 
-    successful_rule = rule_prototype.create_new(
+    successful_rule = server_rule_prototype.create_new(
         match_implementation=lambda *args, **kwargs: True,
         )
     successful_rule_id = core_manager.add_rule(rule=successful_rule)
 
-    first_response = response_prototype.create_new(
+    first_response = server_response_prototype.create_new(
         builder_implementation=lambda *args, **kwargs: b"First response"
         )
     core_manager.set_response(rule_id=exceptional_rule_id, response=first_response)
 
-    second_response = response_prototype.create_new(
+    second_response = server_response_prototype.create_new(
         builder_implementation=lambda *args, **kwargs: b"Second response"
         )
     core_manager.set_response(rule_id=successful_rule_id, response=second_response)
@@ -217,8 +237,8 @@ def test_exception_in_response_building(
         base_endpoint,
         core_manager,
         http_client,
-        rule_prototype,
-        response_prototype,
+        server_rule_prototype,
+        server_response_prototype,
     ):
     """Check that rule is skipped if exception is raised while building a response.
 
@@ -228,7 +248,7 @@ def test_exception_in_response_building(
     4. Make a request.
     5. Check that response, build for the second rule, is returned.
     """
-    rule = rule_prototype.create_new(match_implementation=lambda *args, **kwargs: True)
+    rule = server_rule_prototype.create_new(match_implementation=lambda *args, **kwargs: True)
     exceptional_rule_id = core_manager.add_rule(rule=rule)
     successful_rule_id = core_manager.add_rule(rule=rule)
 
@@ -239,14 +259,14 @@ def test_exception_in_response_building(
         implementation_triggered = True
         raise NotImplementedError()
 
-    exceptional_response = response_prototype.create_new(
+    exceptional_response = server_response_prototype.create_new(
         builder_implementation=_exceptional_builder_implementation,
         )
 
     core_manager.set_response(rule_id=exceptional_rule_id, response=exceptional_response)
 
     successful_builder_implementation = lambda *args, **kwargs: b"Successful response"
-    successful_response = response_prototype.create_new(
+    successful_response = server_response_prototype.create_new(
         builder_implementation=successful_builder_implementation,
         )
 

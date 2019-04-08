@@ -14,8 +14,8 @@ from looseserver.server.application import (
 def test_default_configuration_endpoint(
         rule_factory,
         response_factory,
-        rule_prototype,
-        response_prototype,
+        server_rule_prototype,
+        server_response_prototype,
     ):
     """Test the default configuration endpoint of the application.
 
@@ -34,7 +34,7 @@ def test_default_configuration_endpoint(
         response_factory=response_factory,
         )
 
-    rule = rule_prototype.create_new(
+    rule = server_rule_prototype.create_new(
         rule_type="Test",
         match_implementation=lambda *args, **kwargs: True,
         )
@@ -61,7 +61,7 @@ def test_default_configuration_endpoint(
     assert http_response.status_code == 200, "Can't obtain the rule"
     assert http_response.json["data"]["rule_id"] == rule_id, "Wrong rule"
 
-    response = response_prototype.create_new(
+    response = server_response_prototype.create_new(
         response_type="Test",
         builder_implementation=lambda *args, **kwargs: b"body",
         )
@@ -99,8 +99,8 @@ def test_default_configuration_endpoint(
 def test_configuration_endpoint(
         rule_factory,
         response_factory,
-        rule_prototype,
-        response_prototype,
+        server_rule_prototype,
+        server_response_prototype,
         specified_endpoint,
         expected_endpoint,
     ):
@@ -123,7 +123,7 @@ def test_configuration_endpoint(
         response_factory=response_factory,
         )
 
-    rule = rule_prototype.create_new(
+    rule = server_rule_prototype.create_new(
         rule_type="Test",
         match_implementation=lambda *args, **kwargs: True,
         )
@@ -147,7 +147,7 @@ def test_configuration_endpoint(
     assert http_response.status_code == 200, "Can't obtain the rule"
     assert http_response.json["data"]["rule_id"] == rule_id, "Wrong rule"
 
-    response = response_prototype.create_new(
+    response = server_response_prototype.create_new(
         response_type="Test",
         builder_implementation=lambda *args, **kwargs: b"body",
         )

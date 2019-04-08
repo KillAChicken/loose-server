@@ -115,13 +115,19 @@ class TestBaseEndpoint:
         assert http_response.data == b"body" or method == "HEAD", "Wrong response"
 
     @pytest.fixture(autouse=True)
-    def _setup_fixtures(self, rule_factory, response_factory, rule_prototype, response_prototype):
+    def _setup_fixtures(
+            self,
+            rule_factory,
+            response_factory,
+            server_rule_prototype,
+            server_response_prototype,
+        ):
         """Setup fixtures."""
         # pylint: disable=attribute-defined-outside-init
         self._rule_factory = rule_factory
         self._response_factory = response_factory
-        self._rule_prototype = rule_prototype
-        self._response_prototype = response_prototype
+        self._rule_prototype = server_rule_prototype
+        self._response_prototype = server_response_prototype
 
     def _set_response(self, application, body):
         """Set universal response for all dynamic routes."""
