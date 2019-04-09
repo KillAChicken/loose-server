@@ -9,6 +9,18 @@ from looseserver.server.response import ServerResponse
 
 
 @pytest.fixture
+def base_endpoint():
+    """Base endpoint for routes."""
+    return "/routes/"
+
+
+@pytest.fixture
+def configuration_endpoint():
+    """Endpoint to configure routes."""
+    return "/_configuration/"
+
+
+@pytest.fixture
 def rule_factory():
     """Rule factory."""
     return RuleFactory()
