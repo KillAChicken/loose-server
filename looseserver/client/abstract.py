@@ -1,12 +1,14 @@
 """Module with base client for server configuration."""
 
+from abc import ABC, abstractmethod
+
 import urllib.parse as urlparse
 
 from looseserver.default.client.rule import create_rule_factory
 from looseserver.default.client.response import create_response_factory
 
 
-class AbstractClient:
+class AbstractClient(ABC):
     """Abstract class to manage configuration."""
 
     def __init__(self, base_url, rule_factory=None, response_factory=None):
@@ -28,6 +30,7 @@ class AbstractClient:
         """
         return urlparse.urljoin(self._base_url, relative_url)
 
+    @abstractmethod
     def _send_request(self, url, method="GET", json=None):
         """Make a request.
 
@@ -38,7 +41,6 @@ class AbstractClient:
         :raises: :class:`APIError <looseserver.common.api.APIError>` if response
             contains error from API.
         """
-        raise NotImplementedError("Method to send request has not been implemeneted")
 
     def create_rule(self, rule):
         """Create a rule.
