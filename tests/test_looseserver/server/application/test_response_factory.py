@@ -41,7 +41,12 @@ def test_default_response_factory():
 
     default_response_factory = create_response_factory()
 
-    response = FixedResponse(response_type=ResponseType.FIXED.name, body="body")
+    response = FixedResponse(
+        response_type=ResponseType.FIXED.name,
+        status=200,
+        headers={},
+        body="body",
+        )
     serialized_response = default_response_factory.serialize_response(response=response)
 
     http_response = client.post(

@@ -33,7 +33,7 @@ def test_rule_representation():
         "grandchild",
         ]
     )
-def test_path_rule_match_found(rule_factory, response_factory, response_200, path):
+def test_match_found(rule_factory, response_factory, response_200, path):
     """Check that PathRule is triggered for the specified path.
 
     1. Prepare path rule in the rule factory.
@@ -91,7 +91,7 @@ def test_path_rule_match_found(rule_factory, response_factory, response_200, pat
         "Substring",
         ],
     )
-def test_path_rule_no_match(rule_factory, response_factory, response_200, path, unmanaged_path):
+def test_no_match(rule_factory, response_factory, response_200, path, unmanaged_path):
     """Check that PathRule is not triggered for different paths.
 
     1. Prepare path rule in the rule factory.

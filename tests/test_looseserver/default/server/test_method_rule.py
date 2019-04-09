@@ -26,7 +26,7 @@ def test_rule_representation():
 
 
 @pytest.mark.parametrize(argnames="method", argvalues=_METHODS)
-def test_method_rule_match_found(rule_factory, response_factory, response_200, method):
+def test_match_found(rule_factory, response_factory, response_200, method):
     """Check that MethodRule is triggered for the specified method.
 
     1. Prepare method rule in the rule factory.
@@ -72,7 +72,7 @@ def test_method_rule_match_found(rule_factory, response_factory, response_200, m
 
 
 @pytest.mark.parametrize(argnames="method", argvalues=_METHODS)
-def test_method_rule_no_match(rule_factory, response_factory, response_200, method):
+def test_no_match(rule_factory, response_factory, response_200, method):
     """Check that MethodRule is not triggered for different methods.
 
     1. Prepare method rule in the rule factory.

@@ -25,7 +25,7 @@ def test_rule_representation():
         )
 
 
-def test_composite_rule_match_found(rule_factory, response_factory, response_200):
+def test_match_found(rule_factory, response_factory, response_200):
     """Check that CompositeRule is triggered when all child rules are triggered.
 
     1. Prepare path, method and composite rules in the rule factory.
@@ -84,7 +84,7 @@ def test_composite_rule_match_found(rule_factory, response_factory, response_200
         )
 
 
-def test_composite_rule_no_match(rule_factory, response_factory, response_200):
+def test_no_match(rule_factory, response_factory, response_200):
     """Check that CompositeRule is not triggered if any of the child rules is not triggered.
 
     1. Prepare method and composite rules in the rule factory.

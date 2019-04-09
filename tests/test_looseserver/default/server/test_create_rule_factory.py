@@ -22,6 +22,7 @@ def test_create_rule_factory():
     application = configure_application(
         base_endpoint=base_endpoint,
         configuration_endpoint=configuration_endpoint,
+        rule_factory=rule_factory,
         )
 
     client = application.test_client()

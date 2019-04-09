@@ -13,7 +13,7 @@ from looseserver.default.common.configuration import ResponseFactoryPreparator
 class FixedResponse(ServerResponse):
     """Class for fixed responses."""
 
-    def __init__(self, response_type, body="", status=200, headers=()):
+    def __init__(self, response_type, body, status, headers):
         super(FixedResponse, self).__init__(response_type=response_type)
         self._body = body
         self._status = status
@@ -40,7 +40,7 @@ class FixedResponse(ServerResponse):
         """Build a response.
 
         :param request: instance of :class:flask.Request. Ignored.
-        :param rule: instance of :class:`Rule <looseserver.server.rule._AbstractRule>`. Ignored.
+        :param rule: instance of :class:`Rule <looseserver.server.rule.ServerRule>`. Ignored.
         :returns: instance of :class:flask.Response.
         """
         logging.getLogger(__name__).debug("Build fixed response")
