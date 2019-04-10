@@ -80,7 +80,7 @@ Loose server can be used as a mock server in the following way
 
 .. code-block:: python
 
-    from looseserver.server.run import configure_application
+    from looseserver.server.application import configure_application
     from looseserver.client.flask import FlaskClient
     from looseserver.default.client.rule import PathRule
     from looseserver.default.client.response import FixedResponse
