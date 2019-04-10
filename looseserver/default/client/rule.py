@@ -19,7 +19,10 @@ class PathRule(ClientRule):
         return self._path
 
     def __repr__(self):
-        return "{class_name}('{path}')".format(class_name=self.__class__.__name__, path=self._path)
+        return "{class_name}(path='{path}')".format(
+            class_name=self.__class__.__name__,
+            path=self._path,
+            )
 
 
 class MethodRule(ClientRule):
@@ -35,7 +38,7 @@ class MethodRule(ClientRule):
         return self._method
 
     def __repr__(self):
-        return "{class_name}('{method}')".format(
+        return "{class_name}(method='{method}')".format(
             class_name=self.__class__.__name__,
             method=self._method,
             )
