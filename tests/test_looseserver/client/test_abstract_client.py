@@ -74,6 +74,25 @@ def test_get_rule(rule_factory):
     assert obtained_rule.rule_id == rule_id, "Rule ID has not been set"
 
 
+def test_delete_rule():
+    """Check request data that client uses to remove a rule.
+
+    1. Create a subclass of the abstract client.
+    2. Implement send request so that it checks the request parameters.
+    3. Invoke the remove_rule method.
+    """
+    rule_id = str(uuid.uuid4())
+
+    class _Client(AbstractClient):
+        def _send_request(self, url, method="GET", json=None):
+            assert url == "rule/{0}".format(rule_id), "Wrong url"
+            assert method == "DELETE", "Wrong method"
+            assert json is None, "Data has been specified"
+
+    client = _Client(base_url="/")
+    client.remove_rule(rule_id=rule_id)
+
+
 def test_set_response(response_factory):
     """Check request data that client uses to set a response.
 

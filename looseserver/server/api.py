@@ -85,6 +85,14 @@ class Rule(Resource):
         response_data.update(rule_data)
         return build_response(data=response_data)
 
+    def delete(self, rule_id):
+        """Delete rule by its ID."""
+        logger = logging.getLogger(__name__)
+        logger.debug("Try to delete rule with ID %s", rule_id)
+        self._manager.remove_rule(rule_id)
+        logger.info("Rule %s has been removed", rule_id)
+        return build_response()
+
 
 class Response(Resource):
     """API resource to manage rule responses."""

@@ -66,6 +66,14 @@ class AbstractClient(ABC):
         rule.rule_id = rule_id
         return rule
 
+    def remove_rule(self, rule_id):
+        """Remove rule by its ID.
+
+        :param rule_id: string with rule ID.
+        """
+        rule_url = "rule/{0}".format(rule_id)
+        self._send_request(url=rule_url, method="DELETE")
+
     def set_response(self, rule_id, response):
         """Set response for the rule.
 

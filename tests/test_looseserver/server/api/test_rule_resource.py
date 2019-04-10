@@ -106,3 +106,18 @@ def test_serialization_failed_unknown_error(
 
     message = "Exception has been raised during serialization of the rule"
     assert http_response.json == build_response(error=APIError(message)), "Wrong response"
+
+
+def test_remove_rule(core_manager, rule_endpoint, registered_rule_prototype, application_client):
+    """Check that rule can be removed with API.
+
+    1. Create a rule.
+    2. Make a DELETE request to remove the rule.
+    3. Check that rule is removed.
+    """
+    rule_id = core_manager.add_rule(rule=registered_rule_prototype)
+
+    http_response = application_client.delete(rule_endpoint.format(rule_id=rule_id))
+    assert http_response.status_code == 200, "Wrong status code"
+    assert http_response.json == build_response(), "Wrong response"
+    assert not core_manager.get_rules_order(), "Rule has not been removed"
