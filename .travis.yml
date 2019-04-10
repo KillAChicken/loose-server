@@ -13,7 +13,7 @@ matrix:
     python: "3.7"
 
 install:
-  - pip install flask flask-restful requests pytest pytest-cov pylint
+  - pip install --upgrade flask flask-restful requests pytest pytest-cov pylint
   - pip install --editable .
 
 before_script:
