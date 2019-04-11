@@ -28,179 +28,179 @@ def test_response_representation():
     assert repr(response) == "FixedResponse()", "Wrong representation"
 
 
-@pytest.mark.parametrize(
-    argnames="status",
-    argvalues=[200, 300, 400, 500],
-    ids=["Success", "Redirect", "Bad Request", "Server Error"],
-    )
-def test_status(rule_factory, response_factory, rule_match_all, status):
-    """Check that status can be set by fixed respone.
+class TestParameters:
+    """Test cases for fixed response parameters."""
 
-    1. Prepare fixed response in the response factory.
-    2. Configure application with the response factory.
-    3. Create a rule that matches every request.
-    4. Make a POST-request to set a fixed response with specified status.
-    5. Make a request to the base endpoint.
-    6. Check status of the response.
-    """
-    base_endpoint = "/base/"
-    configuration_endpoint = "/config/"
+    @pytest.fixture(autouse=True)
+    def _setup(
+            self,
+            base_endpoint,
+            configuration_endpoint,
+            rule_factory,
+            response_factory,
+            rule_match_all,
+        ):
+        # pylint: disable=too-many-arguments,attribute-defined-outside-init
+        self.__base_endpoint = base_endpoint
+        self.__configuration_endpoint = configuration_endpoint
+        self.__rule_factory = rule_factory
+        self.__response_factory = response_factory
+        self.__rule_match_all = rule_match_all
 
-    preparator = ResponseFactoryPreparator(response_factory)
-    preparator.prepare_fixed_response(fixed_response_class=FixedResponse)
+        preparator = ResponseFactoryPreparator(response_factory)
+        preparator.prepare_fixed_response(fixed_response_class=FixedResponse)
 
-    application = configure_application(
-        base_endpoint=base_endpoint,
-        configuration_endpoint=configuration_endpoint,
-        rule_factory=rule_factory,
-        response_factory=response_factory,
+        application = configure_application(
+            base_endpoint=self.__base_endpoint,
+            configuration_endpoint=self.__configuration_endpoint,
+            rule_factory=rule_factory,
+            response_factory=response_factory,
+            )
+
+        self.__application_client = application.test_client()
+
+    def _create_rule(self):
+        serialized_rule = self.__rule_factory.serialize_rule(rule=self.__rule_match_all)
+
+        http_response = self.__application_client.post(
+            urljoin(self.__configuration_endpoint, "rules"),
+            json=serialized_rule,
+            )
+        assert http_response.status_code == 200, "Can't create a rule"
+        return http_response.json["data"]["rule_id"]
+
+    @pytest.mark.parametrize(
+        argnames="status",
+        argvalues=[200, 300, 400, 500],
+        ids=["Success", "Redirect", "Bad Request", "Server Error"],
         )
+    def test_status(self, status):
+        """Check that status can be set by fixed respone.
 
-    serialized_rule = rule_factory.serialize_rule(rule=rule_match_all)
+        1. Create a rule.
+        2. Make a POST-request to set a fixed response with specified status.
+        3. Make a request to the base endpoint.
+        4. Check status of the response.
+        """
+        response = FixedResponse(
+            response_type=ResponseType.FIXED.name,
+            status=status,
+            headers={},
+            body="",
+            )
+        serialized_response = self.__response_factory.serialize_response(response=response)
 
-    client = application.test_client()
+        rule_id = self._create_rule()
+        http_response = self.__application_client.post(
+            urljoin(self.__configuration_endpoint, "response/{0}".format(rule_id)),
+            json=serialized_response,
+            )
+        assert http_response.status_code == 200, "Can't set a response"
 
-    http_response = client.post(urljoin(configuration_endpoint, "rules"), json=serialized_rule)
+        assert self.__application_client.get(self.__base_endpoint).status_code == status, (
+            "Wrong status code"
+            )
 
-    assert http_response.status_code == 200, "Can't create a rule"
-
-    rule_id = http_response.json["data"]["rule_id"]
-
-    response = FixedResponse(
-        response_type=ResponseType.FIXED.name,
-        status=status,
-        headers={},
-        body="",
+    @pytest.mark.parametrize(
+        argnames="headers",
+        argvalues=[
+            {},
+            {"key": "value"},
+            {
+                "first": "value",
+                "second": "value",
+                },
+            ],
+        ids=[
+            "Empty headers",
+            "Single header",
+            "Several headers",
+            ]
         )
-    serialized_response = response_factory.serialize_response(response=response)
+    def test_headers(self, headers):
+        """Check that headers can be set by fixed respone.
 
-    http_response = client.post(
-        urljoin(configuration_endpoint, "response/{0}".format(rule_id)),
-        json=serialized_response,
+        1. Create a rule.
+        2. Make a POST-request to set a fixed response with specified headers.
+        3. Make a request to the base endpoint.
+        4. Check that response contains specified headers.
+        """
+        response = FixedResponse(
+            response_type=ResponseType.FIXED.name,
+            status=200,
+            headers=headers,
+            body="",
+            )
+        serialized_response = self.__response_factory.serialize_response(response=response)
+
+        rule_id = self._create_rule()
+        http_response = self.__application_client.post(
+            urljoin(self.__configuration_endpoint, "response/{0}".format(rule_id)),
+            json=serialized_response,
+            )
+        assert http_response.status_code == 200, "Can't set a response"
+
+        http_response = self.__application_client.get(self.__base_endpoint)
+
+        assert set(headers.items()).issubset(http_response.headers.items()), "Headers were not set"
+
+    @pytest.mark.parametrize(
+        argnames="body",
+        argvalues=["", "body"],
+        ids=["Empty", "Non-empty"],
         )
-    assert http_response.status_code == 200, "Can't set a response"
+    def test_string_body(self, body):
+        """Check that body can be set by fixed respone.
 
-    assert client.get(base_endpoint).status_code == status, "Wrong status code"
+        1. Create a rule.
+        2. Make a POST-request to set a fixed response with the specified string body.
+        3. Make a request to the base endpoint.
+        4. Check that response contains specified headers.
+        """
+        response = FixedResponse(
+            response_type=ResponseType.FIXED.name,
+            status=200,
+            headers={},
+            body=body,
+            )
+        serialized_response = self.__response_factory.serialize_response(response=response)
 
+        rule_id = self._create_rule()
+        http_response = self.__application_client.post(
+            urljoin(self.__configuration_endpoint, "response/{0}".format(rule_id)),
+            json=serialized_response,
+            )
+        assert http_response.status_code == 200, "Can't set a response"
 
-@pytest.mark.parametrize(
-    argnames="headers",
-    argvalues=[
-        {},
-        {"key": "value"},
-        {
-            "first": "value",
-            "second": "value",
-            },
-        ],
-    ids=[
-        "Empty headers",
-        "Single header",
-        "Several headers",
-        ]
-    )
-def test_headers(rule_factory, response_factory, rule_match_all, headers):
-    """Check that headers can be set by fixed respone.
+        assert self.__application_client.get(self.__base_endpoint).data == body.encode("utf8"), (
+            "Wrong body"
+            )
 
-    1. Prepare fixed response in the response factory.
-    2. Configure application with the response factory.
-    3. Create a rule that matches every request.
-    4. Make a POST-request to set a fixed response with specified status.
-    5. Make a request to the base endpoint.
-    6. Check that response contains specified headers.
-    """
-    base_endpoint = "/base/"
-    configuration_endpoint = "/config/"
-
-    preparator = ResponseFactoryPreparator(response_factory)
-    preparator.prepare_fixed_response(fixed_response_class=FixedResponse)
-
-    application = configure_application(
-        base_endpoint=base_endpoint,
-        configuration_endpoint=configuration_endpoint,
-        rule_factory=rule_factory,
-        response_factory=response_factory,
+    @pytest.mark.parametrize(
+        argnames="body",
+        argvalues=[b"", b"body"],
+        ids=["Empty", "Non-empty"],
         )
+    def test_bytes_body(self, body):
+        """Check that body can be set by fixed respone.
 
-    serialized_rule = rule_factory.serialize_rule(rule=rule_match_all)
+        1. Create a rule.
+        2. Make a POST-request to set a fixed response with the specified bytes body.
+        3. Make a request to the base endpoint.
+        4. Check that response contains specified headers.
+        """
+        response = FixedResponse(
+            response_type=ResponseType.FIXED.name,
+            status=200,
+            headers={},
+            body=body,
+            )
+        serialized_response = self.__response_factory.serialize_response(response=response)
 
-    client = application.test_client()
-
-    http_response = client.post(urljoin(configuration_endpoint, "rules"), json=serialized_rule)
-
-    assert http_response.status_code == 200, "Can't create a rule"
-
-    rule_id = http_response.json["data"]["rule_id"]
-
-    response = FixedResponse(
-        response_type=ResponseType.FIXED.name,
-        status=200,
-        headers=headers,
-        body="",
-        )
-    serialized_response = response_factory.serialize_response(response=response)
-
-    http_response = client.post(
-        urljoin(configuration_endpoint, "response/{0}".format(rule_id)),
-        json=serialized_response,
-        )
-    assert http_response.status_code == 200, "Can't set a response"
-
-    http_response = client.get(base_endpoint)
-
-    assert set(headers.items()).issubset(http_response.headers.items()), "Headers were not set"
-
-
-@pytest.mark.parametrize(
-    argnames="body",
-    argvalues=["", "body"],
-    ids=["Empty", "Non-empty"],
-    )
-def test_body(rule_factory, response_factory, rule_match_all, body):
-    """Check that headers can be set by fixed respone.
-
-    1. Prepare fixed response in the response factory.
-    2. Configure application with the response factory.
-    3. Create a rule that matches every request.
-    4. Make a POST-request to set a fixed response with specified status.
-    5. Make a request to the base endpoint.
-    6. Check that response contains specified headers.
-    """
-    base_endpoint = "/base/"
-    configuration_endpoint = "/config/"
-
-    preparator = ResponseFactoryPreparator(response_factory)
-    preparator.prepare_fixed_response(fixed_response_class=FixedResponse)
-
-    application = configure_application(
-        base_endpoint=base_endpoint,
-        configuration_endpoint=configuration_endpoint,
-        rule_factory=rule_factory,
-        response_factory=response_factory,
-        )
-
-    serialized_rule = rule_factory.serialize_rule(rule=rule_match_all)
-
-    client = application.test_client()
-
-    http_response = client.post(urljoin(configuration_endpoint, "rules"), json=serialized_rule)
-
-    assert http_response.status_code == 200, "Can't create a rule"
-
-    rule_id = http_response.json["data"]["rule_id"]
-
-    response = FixedResponse(
-        response_type=ResponseType.FIXED.name,
-        status=200,
-        headers={},
-        body=body,
-        )
-    serialized_response = response_factory.serialize_response(response=response)
-
-    http_response = client.post(
-        urljoin(configuration_endpoint, "response/{0}".format(rule_id)),
-        json=serialized_response,
-        )
-    assert http_response.status_code == 200, "Can't set a response"
-
-    assert client.get(base_endpoint).data == body.encode("utf8"), "Wrong body"
+        rule_id = self._create_rule()
+        http_response = self.__application_client.post(
+            urljoin(self.__configuration_endpoint, "response/{0}".format(rule_id)),
+            json=serialized_response,
+            )
+        assert http_response.status_code == 200, "Can't set a response"
+        assert self.__application_client.get(self.__base_endpoint).data == body, "Wrong body"

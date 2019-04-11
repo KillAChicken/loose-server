@@ -1,5 +1,7 @@
 """Module with configuration of the factories."""
 
+import binascii
+import base64
 from urllib.parse import urljoin
 
 from looseserver.common.rule import RuleParseError, RuleSerializeError
@@ -168,13 +170,19 @@ class ResponseFactoryPreparator:
             :returns: instance of configured composite rule class.
             """
             try:
-                body = parameters["body"]
+                encoded_body = parameters["body"]
                 status = parameters["status"]
                 headers = parameters["headers"]
             except (TypeError, KeyError) as error:
                 message = (
                     "Response parameters must be a dictionary with keys 'body', 'status', 'headers'"
                     )
+                raise ResponseParseError(message) from error
+
+            try:
+                body = base64.b64decode(encoded_body.encode("utf8"))
+            except (AttributeError, binascii.Error) as error:
+                message = "Body can't be decoded with base64 encoding"
                 raise ResponseParseError(message) from error
 
             return fixed_response_class(
@@ -200,8 +208,17 @@ class ResponseFactoryPreparator:
                 message = "Response must have attributes 'body', 'status' and 'headers'"
                 raise ResponseSerializeError(message) from error
 
+            if isinstance(body, str):
+                body = body.encode("utf8")
+
+            try:
+                encoded_body = base64.b64encode(body).decode("utf8")
+            except TypeError as error:
+                message = "Body can't be encoded with base64 encoding"
+                raise ResponseSerializeError(message) from error
+
             return {
-                "body": body,
+                "body": encoded_body,
                 "status": status,
                 "headers": headers,
                 }

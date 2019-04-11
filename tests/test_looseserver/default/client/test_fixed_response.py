@@ -52,66 +52,114 @@ def test_default_parameters():
     assert response.body == "", "Wrong body"
 
 
-@pytest.mark.parametrize(
-    argnames="status,headers,body",
-    argvalues=[
-        (200, {}, ""),
-        (400, {}, ""),
-        (303, {"Header": "Value"}, ""),
-        (404, {}, "body"),
-        ],
-    ids=[
-        "Successful response",
-        "Failed response",
-        "Response with headers",
-        "Response with body",
-        ],
-    )
-def test_set_response(
-        base_endpoint,
-        configuration_endpoint,
-        response_factory,
-        status,
-        headers,
-        body,
-    ):
-    # pylint: disable=too-many-arguments
-    """Check that response can be set.
+class TestParameters:
+    """Test cases for fixed response parameters."""
 
-    1. Configure application with default factories.
-    2. Create a method rule.
-    3. Prepare fixed response in the response factory of the flask client.
-    4. Set a response for the rule.
-    5. Check the created response.
-    """
-    application = configure_application(
-        base_endpoint=base_endpoint,
-        configuration_endpoint=configuration_endpoint,
+    @pytest.fixture(autouse=True)
+    def _setup(self, base_endpoint, configuration_endpoint, response_factory):
+        # pylint: disable=attribute-defined-outside-init
+        self.__base_endpoint = base_endpoint
+
+        application = configure_application(
+            base_endpoint=base_endpoint,
+            configuration_endpoint=configuration_endpoint,
+            )
+
+        preparator = ResponseFactoryPreparator(response_factory)
+        preparator.prepare_fixed_response(fixed_response_class=FixedResponse)
+
+        self.__application_client = application.test_client()
+
+        self.__client = FlaskClient(
+            base_url=configuration_endpoint,
+            response_factory=response_factory,
+            application_client=self.__application_client,
+            )
+
+    def _create_rule(self):
+        return self.__client.create_rule(rule=MethodRule(method="GET"))
+
+    @pytest.mark.parametrize(argnames="status", argvalues=[200, 400], ids=["Success", "Failure"])
+    def test_set_response_status(self, status):
+        """Check that response status can be set.
+
+        1. Create a rule.
+        2. Set a fixed response with specified status for the rule.
+        3. Check the status of the response.
+        """
+        rule = self._create_rule()
+
+        fixed_response = FixedResponse(status=status)
+        self.__client.set_response(rule_id=rule.rule_id, response=fixed_response)
+
+        http_response = self.__application_client.get(self.__base_endpoint)
+        assert http_response.status_code == status, "Wrong status code"
+
+    @pytest.mark.parametrize(
+        argnames="headers",
+        argvalues=[
+            {},
+            {"Header": "Value"},
+            {"First-Header": "First Value", "Second-Header": "Second Value"},
+            ],
+        ids=["Without headers", "Single header", "Several headers"],
         )
+    def test_set_response_headers(self, headers):
+        """Check that response headers can be set.
 
-    preparator = ResponseFactoryPreparator(response_factory)
-    preparator.prepare_fixed_response(fixed_response_class=FixedResponse)
+        1. Create a rule.
+        2. Set a fixed response with specified headers for the rule.
+        3. Check the headers of the response.
+        """
+        rule = self._create_rule()
 
-    application_client = application.test_client()
+        fixed_response = FixedResponse(headers=headers)
+        self.__client.set_response(rule_id=rule.rule_id, response=fixed_response)
 
-    client = FlaskClient(
-        base_url=configuration_endpoint,
-        response_factory=response_factory,
-        application_client=application_client,
+        http_response = self.__application_client.get(self.__base_endpoint)
+        assert set(http_response.headers.items()).issuperset(headers.items()), (
+            "Headers were not set"
+            )
+
+    @pytest.mark.parametrize(argnames="body", argvalues=["", "body"], ids=["Empty", "Non-empty"])
+    def test_set_response_string_body(self, body):
+        """Check that response body can be set as a string.
+
+        1. Create a rule.
+        2. Set a fixed response with specified body for the rule.
+        3. Check the body of the response.
+        """
+        rule = self._create_rule()
+
+        fixed_response = FixedResponse(body=body)
+        self.__client.set_response(rule_id=rule.rule_id, response=fixed_response)
+
+        http_response = self.__application_client.get(self.__base_endpoint)
+        assert http_response.data == body.encode("utf8"), "Wrong body"
+
+    @pytest.mark.parametrize(
+        argnames="unicode_body,encoding",
+        argvalues=[
+            (u"", "utf-8"),
+            (u"тело", "utf-8"),
+            (u"тело", "cp1251"),
+            ],
+        ids=["Empty", "Non-empty utf8", "Non-empty cp1251"],
         )
+    def test_set_response_bytes_body(self, unicode_body, encoding):
+        """Check that response body can be set as a bytes object.
 
-    rule = client.create_rule(rule=MethodRule(method="GET"))
+        1. Create a rule.
+        2. Set a response with specified body for the rule.
+        3. Check the body of the response.
+        """
+        rule = self._create_rule()
 
-    fixed_response = FixedResponse(
-        status=status,
-        headers=headers,
-        body=body,
-        )
+        body = unicode_body.encode(encoding)
+        headers = {"Content-Type": "text/plain; charset={0}".format(encoding)}
 
-    client.set_response(rule_id=rule.rule_id, response=fixed_response)
+        fixed_response = FixedResponse(headers=headers, body=body)
+        self.__client.set_response(rule_id=rule.rule_id, response=fixed_response)
 
-    http_response = application_client.get(base_endpoint)
-
-    assert http_response.status_code == status, "Wrong status code"
-    assert set(http_response.headers.items()).issuperset(headers.items()), "Headers were not set"
-    assert http_response.data == body.encode("utf8"), "Wrong body"
+        http_response = self.__application_client.get(self.__base_endpoint)
+        assert http_response.data.decode(encoding) == unicode_body, "Wrong body"

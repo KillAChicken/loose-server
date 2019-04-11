@@ -1,6 +1,7 @@
 """Test cases to check the configuration for fixed responses."""
 
 from collections import namedtuple
+import base64
 
 import pytest
 
@@ -36,7 +37,7 @@ def test_prepare_fixed_response(response_factory):
     expected_data = {
         "status": 200,
         "headers": {"key": "value"},
-        "body": "body",
+        "body": base64.b64encode(b"body").decode("utf8"),
         }
     assert serialized_response["parameters"] == expected_data, "Incorrect serialization"
 
@@ -44,7 +45,9 @@ def test_prepare_fixed_response(response_factory):
 
     assert isinstance(parsed_response, _FixedResponse), "Wrong type of the response"
     assert parsed_response.response_type == ResponseType.FIXED.name, "Wrong response type"
-    assert parsed_response == response, "Wrong response"
+    assert parsed_response.status == response.status, "Wrong status"
+    assert parsed_response.headers == response.headers, "Wrong headers"
+    assert parsed_response.body == response.body.encode("utf8"), "Wrong body"
 
 
 @pytest.mark.parametrize(
@@ -85,7 +88,7 @@ def test_parse_wrong_parameters_type(response_factory):
     """Check that ResponseParseError is raised if parameters are of a wrong type.
 
     1. Create preparator for a response factory.
-    2. Prepare fixed rule.
+    2. Prepare fixed response.
     3. Try to parse data with string parameters.
     4. Check that ResponseParseError is raised.
     5. Check the error.
@@ -108,6 +111,39 @@ def test_parse_wrong_parameters_type(response_factory):
     expected_message = (
         "Response parameters must be a dictionary with keys 'body', 'status', 'headers'"
         )
+    assert exception_info.value.args[0] == expected_message, "Wrong error message"
+
+
+@pytest.mark.parametrize(
+    argnames="body",
+    argvalues=["Invalid base64", list()],
+    ids=["Invalid base64 string", "Invalid type"],
+    )
+def test_parse_wrong_body(response_factory, body):
+    """Check that ResponseParseError is raised if the specified body is not base64 encoded.
+
+    1. Create preparator for a response factory.
+    2. Prepare fixed response.
+    3. Try to parse data with wrong body.
+    4. Check that ResponseParseError is raised.
+    5. Check the error.
+    """
+    preparator = ResponseFactoryPreparator(response_factory)
+    preparator.prepare_fixed_response(fixed_response_class=_FixedResponse)
+
+    response = _FixedResponse(
+        response_type=ResponseType.FIXED.name,
+        status=200,
+        headers={},
+        body="body",
+        )
+    serialized_response = response_factory.serialize_response(response=response)
+    serialized_response["parameters"]["body"] = body
+
+    with pytest.raises(ResponseParseError) as exception_info:
+        response_factory.parse_response(serialized_response)
+
+    expected_message = "Body can't be decoded with base64 encoding"
     assert exception_info.value.args[0] == expected_message, "Wrong error message"
 
 
@@ -143,4 +179,30 @@ def test_serialize_missing_attribute(response_factory, attribute):
         response_factory.serialize_response(response=response)
 
     expected_message = "Response must have attributes 'body', 'status' and 'headers'"
+    assert exception_info.value.args[0] == expected_message, "Wrong error message"
+
+
+def test_serialize_wrong_body(response_factory):
+    """Check that ResponseSerializeError is raised if response body can't be encoded with base64.
+
+    1. Create preparator for a response factory.
+    2. Prepare fixed response.
+    3. Try to serialize response with a list specified for the body.
+    4. Check that ResponseSerializeError is raised.
+    5. Check the error.
+    """
+    preparator = ResponseFactoryPreparator(response_factory)
+    preparator.prepare_fixed_response(fixed_response_class=_FixedResponse)
+
+    response = _FixedResponse(
+        response_type=ResponseType.FIXED.name,
+        status=200,
+        headers={},
+        body=[],
+        )
+
+    with pytest.raises(ResponseSerializeError) as exception_info:
+        response_factory.serialize_response(response=response)
+
+    expected_message = "Body can't be encoded with base64 encoding"
     assert exception_info.value.args[0] == expected_message, "Wrong error message"
