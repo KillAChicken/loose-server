@@ -6,8 +6,10 @@ from looseserver.common.rule import RuleFactory
 from looseserver.common.response import ResponseFactory
 from looseserver.server.rule import ServerRule
 from looseserver.server.response import ServerResponse
+from looseserver.server.application import configure_application
 
 
+# pylint: disable=redefined-outer-name
 @pytest.fixture
 def base_endpoint():
     """Base endpoint for routes."""
@@ -30,6 +32,61 @@ def rule_factory():
 def response_factory():
     """Response factory."""
     return ResponseFactory()
+
+
+@pytest.fixture
+def server_rule_factory():
+    """Custom rule factory for server."""
+    return RuleFactory()
+
+
+@pytest.fixture
+def server_response_factory():
+    """Custom response factory for server."""
+    return ResponseFactory()
+
+
+@pytest.fixture
+def client_rule_factory():
+    """Custom rule factory for client."""
+    return RuleFactory()
+
+
+@pytest.fixture
+def client_response_factory():
+    """Custom response factory for client."""
+    return ResponseFactory()
+
+
+@pytest.fixture
+def application_factory(
+        base_endpoint,
+        configuration_endpoint,
+        server_rule_factory,
+        server_response_factory,
+    ):
+    """
+    Callable factory, producing configured application.
+    Other fixtures are used for the default values, namely:
+        base_endpoint,
+        configuration_endpoint,
+        server_rule_factory,
+        server_response_factory.
+    """
+    def _application_factory(
+            base_endpoint=base_endpoint,
+            configuration_endpoint=configuration_endpoint,
+            rule_factory=server_rule_factory,
+            response_factory=server_response_factory,
+        ):
+        return configure_application(
+            base_endpoint=base_endpoint,
+            configuration_endpoint=configuration_endpoint,
+            rule_factory=rule_factory,
+            response_factory=response_factory,
+            )
+
+    return _application_factory
 
 
 @pytest.fixture
@@ -95,3 +152,4 @@ def server_response_prototype():
                 )
 
     return ConfigurableResponse()
+# pylint: enable=redefined-outer-name
