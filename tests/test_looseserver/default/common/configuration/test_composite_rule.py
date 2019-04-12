@@ -18,7 +18,7 @@ _CompositeRule = namedtuple("_CompositeRule", "children rule_type")
     argvalues=[2, 0, 1],
     ids=["Several children", "Without children", "Single children"],
     )
-def test_prepare_composite_rule(rule_factory, number_of_children):
+def test_prepare_composite_rule(server_rule_factory, number_of_children):
     """Check that composite rule can be serialized.
 
     1. Create preparator for a rule factory.
@@ -27,7 +27,7 @@ def test_prepare_composite_rule(rule_factory, number_of_children):
     4. Parse serialized data.
     5. Check parsed rule.
     """
-    preparator = RuleFactoryPreparator(rule_factory)
+    preparator = RuleFactoryPreparator(server_rule_factory)
     preparator.prepare_method_rule(method_rule_class=_MethodRule)
     preparator.prepare_composite_rule(composite_rule_class=_CompositeRule)
 
@@ -36,15 +36,15 @@ def test_prepare_composite_rule(rule_factory, number_of_children):
         for index in range(number_of_children)
         ]
     rule = _CompositeRule(children=children, rule_type=RuleType.COMPOSITE.name)
-    serialized_rule = rule_factory.serialize_rule(rule=rule)
+    serialized_rule = server_rule_factory.serialize_rule(rule=rule)
 
-    expected_serialized_children = [rule_factory.serialize_rule(rule=child) for child in children]
+    expected_serialized_children = [server_rule_factory.serialize_rule(child) for child in children]
 
     assert serialized_rule["parameters"] == {"children": expected_serialized_children}, (
         "Incorrect serialization"
         )
 
-    parsed_rule = rule_factory.parse_rule(data=serialized_rule)
+    parsed_rule = server_rule_factory.parse_rule(data=serialized_rule)
 
     assert isinstance(parsed_rule, _CompositeRule), "Wrong type of the rule"
     assert parsed_rule.rule_type == RuleType.COMPOSITE.name, "Wrong rule type"
@@ -55,7 +55,7 @@ def test_prepare_composite_rule(rule_factory, number_of_children):
         ), "Wrong children"
 
 
-def test_parse_missing_children(rule_factory):
+def test_parse_missing_children(server_rule_factory):
     """Check that RuleParseError is raised if children are missing.
 
     1. Create preparator for a rule factory.
@@ -64,21 +64,21 @@ def test_parse_missing_children(rule_factory):
     4. Check that RuleParseError is raised.
     5. Check the error.
     """
-    preparator = RuleFactoryPreparator(rule_factory)
+    preparator = RuleFactoryPreparator(server_rule_factory)
     preparator.prepare_composite_rule(composite_rule_class=_CompositeRule)
 
     rule = _CompositeRule(rule_type=RuleType.COMPOSITE.name, children=())
-    serialized_rule = rule_factory.serialize_rule(rule=rule)
+    serialized_rule = server_rule_factory.serialize_rule(rule=rule)
     serialized_rule["parameters"].pop("children")
 
     with pytest.raises(RuleParseError) as exception_info:
-        rule_factory.parse_rule(serialized_rule)
+        server_rule_factory.parse_rule(serialized_rule)
 
     expected_message = "Rule parameters must be a dictionary with 'children' key"
     assert exception_info.value.args[0] == expected_message, "Wrong error message"
 
 
-def test_parse_wrong_parameters_type(rule_factory):
+def test_parse_wrong_parameters_type(server_rule_factory):
     """Check that RuleParseError is raised if parameters are of a wrong type.
 
     1. Create preparator for a rule factory.
@@ -87,21 +87,21 @@ def test_parse_wrong_parameters_type(rule_factory):
     4. Check that RuleParseError is raised.
     5. Check the error.
     """
-    preparator = RuleFactoryPreparator(rule_factory)
+    preparator = RuleFactoryPreparator(server_rule_factory)
     preparator.prepare_composite_rule(composite_rule_class=_CompositeRule)
 
     rule = _CompositeRule(rule_type=RuleType.COMPOSITE.name, children=())
-    serialized_rule = rule_factory.serialize_rule(rule=rule)
+    serialized_rule = server_rule_factory.serialize_rule(rule=rule)
     serialized_rule["parameters"] = ""
 
     with pytest.raises(RuleParseError) as exception_info:
-        rule_factory.parse_rule(serialized_rule)
+        server_rule_factory.parse_rule(serialized_rule)
 
     expected_message = "Rule parameters must be a dictionary with 'children' key"
     assert exception_info.value.args[0] == expected_message, "Wrong error message"
 
 
-def test_serialize_missing_children(rule_factory):
+def test_serialize_missing_children(server_rule_factory):
     """Check that RuleSerializeError is raised if rule class does not have children attribute.
 
     1. Create preparator for a rule factory.
@@ -116,13 +116,13 @@ def test_serialize_missing_children(rule_factory):
             # pylint: disable=unused-argument
             self.rule_type = rule_type
 
-    preparator = RuleFactoryPreparator(rule_factory)
+    preparator = RuleFactoryPreparator(server_rule_factory)
     preparator.prepare_composite_rule(composite_rule_class=_WrongRule)
 
     rule = _WrongRule(children=(), rule_type=RuleType.COMPOSITE.name)
 
     with pytest.raises(RuleSerializeError) as exception_info:
-        rule_factory.serialize_rule(rule=rule)
+        server_rule_factory.serialize_rule(rule=rule)
 
     assert exception_info.value.args[0] == "Composite rule must have children attribute", (
         "Wrong error message"

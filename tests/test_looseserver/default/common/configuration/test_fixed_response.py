@@ -14,7 +14,7 @@ _RESPONSE_FIELDS = ("status", "headers", "body")
 _FixedResponse = namedtuple("FixedResponse", ["response_type"] + list(_RESPONSE_FIELDS))
 
 
-def test_prepare_fixed_response(response_factory):
+def test_prepare_fixed_response(server_response_factory):
     """Check that fixed response can be serialized.
 
     1. Create preparator for a response factory.
@@ -23,7 +23,7 @@ def test_prepare_fixed_response(response_factory):
     4. Parse serialized data.
     5. Check parsed response.
     """
-    preparator = ResponseFactoryPreparator(response_factory)
+    preparator = ResponseFactoryPreparator(server_response_factory)
     preparator.prepare_fixed_response(fixed_response_class=_FixedResponse)
 
     response = _FixedResponse(
@@ -32,7 +32,7 @@ def test_prepare_fixed_response(response_factory):
         body="body",
         response_type=ResponseType.FIXED.name,
         )
-    serialized_response = response_factory.serialize_response(response=response)
+    serialized_response = server_response_factory.serialize_response(response=response)
 
     expected_data = {
         "status": 200,
@@ -41,7 +41,7 @@ def test_prepare_fixed_response(response_factory):
         }
     assert serialized_response["parameters"] == expected_data, "Incorrect serialization"
 
-    parsed_response = response_factory.parse_response(data=serialized_response)
+    parsed_response = server_response_factory.parse_response(data=serialized_response)
 
     assert isinstance(parsed_response, _FixedResponse), "Wrong type of the response"
     assert parsed_response.response_type == ResponseType.FIXED.name, "Wrong response type"
@@ -54,7 +54,7 @@ def test_prepare_fixed_response(response_factory):
     argnames="attribute",
     argvalues=_RESPONSE_FIELDS,
     )
-def test_parse_missing_attribute(response_factory, attribute):
+def test_parse_missing_attribute(server_response_factory, attribute):
     """Check that ResponseParseError is raised if one of the attributes is missing.
 
     1. Create preparator for a response factory.
@@ -63,7 +63,7 @@ def test_parse_missing_attribute(response_factory, attribute):
     4. Check that ResponseParseError is raised.
     5. Check the error.
     """
-    preparator = ResponseFactoryPreparator(response_factory)
+    preparator = ResponseFactoryPreparator(server_response_factory)
     preparator.prepare_fixed_response(fixed_response_class=_FixedResponse)
 
     response = _FixedResponse(
@@ -72,11 +72,11 @@ def test_parse_missing_attribute(response_factory, attribute):
         headers={},
         body="",
         )
-    serialized_response = response_factory.serialize_response(response=response)
+    serialized_response = server_response_factory.serialize_response(response=response)
     serialized_response["parameters"].pop(attribute)
 
     with pytest.raises(ResponseParseError) as exception_info:
-        response_factory.parse_response(serialized_response)
+        server_response_factory.parse_response(serialized_response)
 
     expected_message = (
         "Response parameters must be a dictionary with keys 'body', 'status', 'headers'"
@@ -84,7 +84,7 @@ def test_parse_missing_attribute(response_factory, attribute):
     assert exception_info.value.args[0] == expected_message, "Wrong error message"
 
 
-def test_parse_wrong_parameters_type(response_factory):
+def test_parse_wrong_parameters_type(server_response_factory):
     """Check that ResponseParseError is raised if parameters are of a wrong type.
 
     1. Create preparator for a response factory.
@@ -93,7 +93,7 @@ def test_parse_wrong_parameters_type(response_factory):
     4. Check that ResponseParseError is raised.
     5. Check the error.
     """
-    preparator = ResponseFactoryPreparator(response_factory)
+    preparator = ResponseFactoryPreparator(server_response_factory)
     preparator.prepare_fixed_response(fixed_response_class=_FixedResponse)
 
     response = _FixedResponse(
@@ -102,11 +102,11 @@ def test_parse_wrong_parameters_type(response_factory):
         headers={},
         body="body",
         )
-    serialized_response = response_factory.serialize_response(response=response)
+    serialized_response = server_response_factory.serialize_response(response=response)
     serialized_response["parameters"] = ""
 
     with pytest.raises(ResponseParseError) as exception_info:
-        response_factory.parse_response(serialized_response)
+        server_response_factory.parse_response(serialized_response)
 
     expected_message = (
         "Response parameters must be a dictionary with keys 'body', 'status', 'headers'"
@@ -119,7 +119,7 @@ def test_parse_wrong_parameters_type(response_factory):
     argvalues=["Invalid base64", list()],
     ids=["Invalid base64 string", "Invalid type"],
     )
-def test_parse_wrong_body(response_factory, body):
+def test_parse_wrong_body(server_response_factory, body):
     """Check that ResponseParseError is raised if the specified body is not base64 encoded.
 
     1. Create preparator for a response factory.
@@ -128,7 +128,7 @@ def test_parse_wrong_body(response_factory, body):
     4. Check that ResponseParseError is raised.
     5. Check the error.
     """
-    preparator = ResponseFactoryPreparator(response_factory)
+    preparator = ResponseFactoryPreparator(server_response_factory)
     preparator.prepare_fixed_response(fixed_response_class=_FixedResponse)
 
     response = _FixedResponse(
@@ -137,11 +137,11 @@ def test_parse_wrong_body(response_factory, body):
         headers={},
         body="body",
         )
-    serialized_response = response_factory.serialize_response(response=response)
+    serialized_response = server_response_factory.serialize_response(response=response)
     serialized_response["parameters"]["body"] = body
 
     with pytest.raises(ResponseParseError) as exception_info:
-        response_factory.parse_response(serialized_response)
+        server_response_factory.parse_response(serialized_response)
 
     expected_message = "Body can't be decoded with base64 encoding"
     assert exception_info.value.args[0] == expected_message, "Wrong error message"
@@ -151,7 +151,7 @@ def test_parse_wrong_body(response_factory, body):
     argnames="attribute",
     argvalues=_RESPONSE_FIELDS,
     )
-def test_serialize_missing_attribute(response_factory, attribute):
+def test_serialize_missing_attribute(server_response_factory, attribute):
     """Check that ResponseSerializeError is raised if response class does not have an attribute.
 
     1. Create preparator for a response factory.
@@ -169,20 +169,20 @@ def test_serialize_missing_attribute(response_factory, attribute):
         kwargs.pop(attribute, None)
         return _WrongResponse(**kwargs)
 
-    preparator = ResponseFactoryPreparator(response_factory)
+    preparator = ResponseFactoryPreparator(server_response_factory)
     preparator.prepare_fixed_response(fixed_response_class=_create_response)
 
     field_values = {field: "" for field in fields}
     response = _WrongResponse(response_type=ResponseType.FIXED.name, **field_values)
 
     with pytest.raises(ResponseSerializeError) as exception_info:
-        response_factory.serialize_response(response=response)
+        server_response_factory.serialize_response(response=response)
 
     expected_message = "Response must have attributes 'body', 'status' and 'headers'"
     assert exception_info.value.args[0] == expected_message, "Wrong error message"
 
 
-def test_serialize_wrong_body(response_factory):
+def test_serialize_wrong_body(server_response_factory):
     """Check that ResponseSerializeError is raised if response body can't be encoded with base64.
 
     1. Create preparator for a response factory.
@@ -191,7 +191,7 @@ def test_serialize_wrong_body(response_factory):
     4. Check that ResponseSerializeError is raised.
     5. Check the error.
     """
-    preparator = ResponseFactoryPreparator(response_factory)
+    preparator = ResponseFactoryPreparator(server_response_factory)
     preparator.prepare_fixed_response(fixed_response_class=_FixedResponse)
 
     response = _FixedResponse(
@@ -202,7 +202,7 @@ def test_serialize_wrong_body(response_factory):
         )
 
     with pytest.raises(ResponseSerializeError) as exception_info:
-        response_factory.serialize_response(response=response)
+        server_response_factory.serialize_response(response=response)
 
     expected_message = "Body can't be encoded with base64 encoding"
     assert exception_info.value.args[0] == expected_message, "Wrong error message"
