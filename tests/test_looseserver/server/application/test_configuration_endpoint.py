@@ -12,10 +12,11 @@ from looseserver.server.application import (
 
 
 def test_default_configuration_endpoint(
-        rule_factory,
-        response_factory,
-        server_rule_prototype,
-        server_response_prototype,
+        server_rule_factory,
+        server_response_factory,
+        registered_match_all_rule,
+        registered_response_data,
+        registered_success_response,
     ):
     """Test the default configuration endpoint of the application.
 
@@ -30,57 +31,34 @@ def test_default_configuration_endpoint(
     9. Check the response.
     """
     application = configure_application(
-        rule_factory=rule_factory,
-        response_factory=response_factory,
+        rule_factory=server_rule_factory,
+        response_factory=server_response_factory,
         )
-
-    rule = server_rule_prototype.create_new(
-        rule_type="Test",
-        match_implementation=lambda *args, **kwargs: True,
-        )
-
-    rule_factory.register_rule(
-        rule_type=rule.rule_type,
-        parser=lambda *args, **kwargs: rule,
-        serializer=lambda *args, **kwargs: {},
-        )
-
-    serialized_rule = rule_factory.serialize_rule(rule=rule)
-
     client = application.test_client()
+
+    serialized_rule = server_rule_factory.serialize_rule(rule=registered_match_all_rule)
+
     http_response = client.post(
         urljoin(DEFAULT_CONFIGURATION_ENDPOINT, "rules"),
         json=serialized_rule,
         )
-
     assert http_response.status_code == 200, "Can't create a rule"
 
     rule_id = http_response.json["data"]["rule_id"]
-    http_response = client.get(urljoin(DEFAULT_CONFIGURATION_ENDPOINT, "rule/{0}".format(rule_id)))
-
+    http_response = client.get(
+        urljoin(DEFAULT_CONFIGURATION_ENDPOINT, "rule/{0}".format(rule_id)),
+        )
     assert http_response.status_code == 200, "Can't obtain the rule"
     assert http_response.json["data"]["rule_id"] == rule_id, "Wrong rule"
 
-    response = server_response_prototype.create_new(
-        response_type="Test",
-        builder_implementation=lambda *args, **kwargs: b"body",
-        )
-
-    response_factory.register_response(
-        response_type=response.response_type,
-        parser=lambda *args, **kwargs: response,
-        serializer=lambda *args, **kwargs: {},
-        )
-
-    serialized_response = response_factory.serialize_response(response=response)
+    serialized_response = server_response_factory.serialize_response(registered_success_response)
 
     http_response = client.post(
         urljoin(DEFAULT_CONFIGURATION_ENDPOINT, "response/{0}".format(rule_id)),
         json=serialized_response,
         )
-
     assert http_response.status_code == 200, "Can't set the response"
-    assert client.get(DEFAULT_BASE_ENDPOINT).data == b"body", "Wrong response"
+    assert client.get(DEFAULT_BASE_ENDPOINT).data == registered_response_data, "Wrong response"
 
 
 @pytest.mark.parametrize(
@@ -97,10 +75,11 @@ def test_default_configuration_endpoint(
         ],
     )
 def test_configuration_endpoint(
-        rule_factory,
-        response_factory,
-        server_rule_prototype,
-        server_response_prototype,
+        server_rule_factory,
+        server_response_factory,
+        registered_match_all_rule,
+        registered_response_data,
+        registered_success_response,
         specified_endpoint,
         expected_endpoint,
     ):
@@ -119,51 +98,27 @@ def test_configuration_endpoint(
     """
     application = configure_application(
         configuration_endpoint=specified_endpoint,
-        rule_factory=rule_factory,
-        response_factory=response_factory,
+        rule_factory=server_rule_factory,
+        response_factory=server_response_factory,
         )
-
-    rule = server_rule_prototype.create_new(
-        rule_type="Test",
-        match_implementation=lambda *args, **kwargs: True,
-        )
-
-    rule_factory.register_rule(
-        rule_type=rule.rule_type,
-        parser=lambda *args, **kwargs: rule,
-        serializer=lambda *args, **kwargs: {},
-        )
-
-    serialized_rule = rule_factory.serialize_rule(rule=rule)
 
     client = application.test_client()
-    http_response = client.post(urljoin(expected_endpoint, "rules"), json=serialized_rule)
 
+    serialized_rule = server_rule_factory.serialize_rule(rule=registered_match_all_rule)
+
+    http_response = client.post(urljoin(expected_endpoint, "rules"), json=serialized_rule)
     assert http_response.status_code == 200, "Can't create a rule"
 
     rule_id = http_response.json["data"]["rule_id"]
     http_response = client.get(urljoin(expected_endpoint, "rule/{0}".format(rule_id)))
-
     assert http_response.status_code == 200, "Can't obtain the rule"
     assert http_response.json["data"]["rule_id"] == rule_id, "Wrong rule"
 
-    response = server_response_prototype.create_new(
-        response_type="Test",
-        builder_implementation=lambda *args, **kwargs: b"body",
-        )
-
-    response_factory.register_response(
-        response_type=response.response_type,
-        parser=lambda *args, **kwargs: response,
-        serializer=lambda *args, **kwargs: {},
-        )
-
-    serialized_response = response_factory.serialize_response(response=response)
+    serialized_response = server_response_factory.serialize_response(registered_success_response)
 
     http_response = client.post(
         urljoin(expected_endpoint, "response/{0}".format(rule_id)),
         json=serialized_response,
         )
-
     assert http_response.status_code == 200, "Can't set the response"
-    assert client.get(DEFAULT_BASE_ENDPOINT).data == b"body", "Wrong response"
+    assert client.get(DEFAULT_BASE_ENDPOINT).data == registered_response_data, "Wrong response"

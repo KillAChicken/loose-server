@@ -28,13 +28,10 @@ def test_default_rule_factory():
     rule = MethodRule(rule_type=RuleType.METHOD.name, method="PUT")
     serialized_rule = default_rule_factory.serialize_rule(rule=rule)
 
-    client = application.test_client()
-
-    http_response = client.post(
+    http_response = application.test_client().post(
         urljoin(DEFAULT_CONFIGURATION_ENDPOINT, "rules"),
         json=serialized_rule,
         )
-
     assert http_response.status_code == 200, "Can't create a rule"
     assert http_response.json["data"]["rule_id"] is not None, "Response does not contain rule ID"
 
@@ -59,15 +56,11 @@ def test_rule_factory(server_rule_prototype):
         parser=lambda *args, **kwargs: rule,
         serializer=lambda *args, **kwargs: {},
         )
-
     serialized_rule = rule_factory.serialize_rule(rule=rule)
 
-    client = application.test_client()
-
-    http_response = client.post(
+    http_response = application.test_client().post(
         urljoin(DEFAULT_CONFIGURATION_ENDPOINT, "rules"),
         json=serialized_rule,
         )
-
     assert http_response.status_code == 200, "Can't create a rule"
     assert http_response.json["data"]["rule_id"] is not None, "Response does not contain rule ID"
