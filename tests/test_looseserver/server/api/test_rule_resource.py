@@ -18,14 +18,14 @@ def rule_endpoint():
 
 
 @pytest.fixture
-def application_client(rule_endpoint, core_manager, rule_factory):
+def application_client(rule_endpoint, core_manager, server_rule_factory):
     """Client of the configured application."""
     application = Flask("TestApplication")
     api = Api(application)
     api.add_resource(
         Rule,
         rule_endpoint.format(rule_id="<rule_id>"),
-        resource_class_args=(core_manager, rule_factory),
+        resource_class_args=(core_manager, server_rule_factory),
         )
     return application.test_client()
 
@@ -33,7 +33,7 @@ def application_client(rule_endpoint, core_manager, rule_factory):
 def test_get_rule(
         core_manager,
         rule_endpoint,
-        rule_factory,
+        server_rule_factory,
         registered_rule_prototype,
         application_client,
     ):
@@ -48,7 +48,7 @@ def test_get_rule(
     http_response = application_client.get(rule_endpoint.format(rule_id=rule_id))
     assert http_response.status_code == 200, "Wrong status code"
 
-    expected_data = rule_factory.serialize_rule(registered_rule_prototype)
+    expected_data = server_rule_factory.serialize_rule(registered_rule_prototype)
     expected_data["rule_id"] = rule_id
     assert http_response.json == build_response(data=expected_data), "Wrong response"
 
@@ -78,7 +78,7 @@ def test_get_non_existent_rule(
 def test_serialization_failed_unknown_error(
         core_manager,
         rule_endpoint,
-        rule_factory,
+        server_rule_factory,
         server_rule_prototype,
         application_client,
     ):
@@ -96,7 +96,11 @@ def test_serialization_failed_unknown_error(
         raise RuleError()
 
     rule = server_rule_prototype.create_new(rule_type="RuleError")
-    rule_factory.register_rule(rule_type=rule.rule_type, parser=parser, serializer=_serializer)
+    server_rule_factory.register_rule(
+        rule_type=rule.rule_type,
+        parser=parser,
+        serializer=_serializer,
+        )
 
     rule_id = core_manager.add_rule(rule=rule)
 

@@ -18,14 +18,14 @@ def rules_manager_endpoint():
 
 
 @pytest.fixture
-def application_client(rules_manager_endpoint, core_manager, rule_factory):
+def application_client(rules_manager_endpoint, core_manager, server_rule_factory):
     """Client of the configured application."""
     application = Flask("TestApplication")
     api = Api(application)
     api.add_resource(
         RulesManager,
         rules_manager_endpoint,
-        resource_class_args=(core_manager, rule_factory),
+        resource_class_args=(core_manager, server_rule_factory),
         )
     return application.test_client()
 
@@ -33,7 +33,7 @@ def application_client(rules_manager_endpoint, core_manager, rule_factory):
 def test_create_rule(
         core_manager,
         rules_manager_endpoint,
-        rule_factory,
+        server_rule_factory,
         registered_rule_prototype,
         application_client,
     ):
@@ -42,7 +42,7 @@ def test_create_rule(
     1. Make a POST request to create a rule.
     2. Check that rule is created.
     """
-    serialized_rule = rule_factory.serialize_rule(registered_rule_prototype)
+    serialized_rule = server_rule_factory.serialize_rule(registered_rule_prototype)
     http_response = application_client.post(rules_manager_endpoint, json=serialized_rule)
 
     assert http_response.status_code == 200, "Wrong status code"
@@ -84,7 +84,7 @@ def test_request_data_error(core_manager, rules_manager_endpoint, application_cl
 def test_parse_failed_parse_error(
         core_manager,
         rules_manager_endpoint,
-        rule_factory,
+        server_rule_factory,
         application_client,
     ):
     """Check that error is returned if RuleParseError is raised on attempt to parse data.
@@ -101,7 +101,7 @@ def test_parse_failed_parse_error(
 
     parent_error = None
     try:
-        rule_factory.parse_rule(data=rule_data)
+        server_rule_factory.parse_rule(data=rule_data)
     except RuleParseError as error:
         parent_error = error
 
@@ -113,7 +113,7 @@ def test_parse_failed_parse_error(
 def test_parse_failed_unknown_error(
         core_manager,
         rules_manager_endpoint,
-        rule_factory,
+        server_rule_factory,
         server_rule_prototype,
         application_client,
     ):
@@ -130,9 +130,9 @@ def test_parse_failed_unknown_error(
 
     serializer = lambda rule_type, rule: rule_type
 
-    rule_factory.register_rule(rule_type="RuleError", parser=_parser, serializer=serializer)
+    server_rule_factory.register_rule(rule_type="RuleError", parser=_parser, serializer=serializer)
     rule = server_rule_prototype.create_new(rule_type="RuleError")
-    serialized_rule = rule_factory.serialize_rule(rule=rule)
+    serialized_rule = server_rule_factory.serialize_rule(rule=rule)
 
     http_response = application_client.post(rules_manager_endpoint, json=serialized_rule)
 
@@ -146,7 +146,7 @@ def test_parse_failed_unknown_error(
 def test_serialization_failed_unknown_error(
         core_manager,
         rules_manager_endpoint,
-        rule_factory,
+        server_rule_factory,
         server_rule_prototype,
         application_client,
     ):
@@ -163,7 +163,7 @@ def test_serialization_failed_unknown_error(
     def _serializer(*args, **kwargs):
         raise RuleError()
 
-    rule_factory.register_rule(rule_type="RuleError", parser=parser, serializer=_serializer)
+    server_rule_factory.register_rule(rule_type="RuleError", parser=parser, serializer=_serializer)
 
     rule_data = {
         "rule_type": "RuleError",

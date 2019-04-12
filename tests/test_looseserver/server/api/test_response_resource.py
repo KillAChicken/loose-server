@@ -18,14 +18,14 @@ def response_endpoint():
 
 
 @pytest.fixture
-def application_client(response_endpoint, core_manager, response_factory):
+def application_client(response_endpoint, core_manager, server_response_factory):
     """Client of the configured application."""
     application = Flask("TestApplication")
     api = Api(application)
     api.add_resource(
         Response,
         response_endpoint.format(rule_id="<rule_id>"),
-        resource_class_args=(core_manager, response_factory),
+        resource_class_args=(core_manager, server_response_factory),
         )
     return application.test_client()
 
@@ -33,7 +33,7 @@ def application_client(response_endpoint, core_manager, response_factory):
 def test_set_response(
         core_manager,
         response_endpoint,
-        response_factory,
+        server_response_factory,
         server_rule_prototype,
         registered_response_prototype,
         application_client,
@@ -47,7 +47,7 @@ def test_set_response(
     """
     rule_id = core_manager.add_rule(server_rule_prototype)
 
-    serialized_response = response_factory.serialize_response(registered_response_prototype)
+    serialized_response = server_response_factory.serialize_response(registered_response_prototype)
     http_response = application_client.post(
         response_endpoint.format(rule_id=rule_id),
         json=serialized_response,
@@ -97,7 +97,7 @@ def test_request_data_error(
 def test_parse_failed_parse_error(
         core_manager,
         response_endpoint,
-        response_factory,
+        server_response_factory,
         server_rule_prototype,
         application_client,
     ):
@@ -121,7 +121,7 @@ def test_parse_failed_parse_error(
 
     parent_error = None
     try:
-        response_factory.parse_response(data=response_data)
+        server_response_factory.parse_response(data=response_data)
     except ResponseParseError as error:
         parent_error = error
 
@@ -137,7 +137,7 @@ def test_parse_failed_parse_error(
 def test_parse_failed_unknown_error(
         core_manager,
         response_endpoint,
-        response_factory,
+        server_response_factory,
         server_rule_prototype,
         server_response_prototype,
         application_client,
@@ -160,12 +160,12 @@ def test_parse_failed_unknown_error(
     serializer = lambda response_type, response: response_type
 
     response = server_response_prototype.create_new(response_type="RuleError")
-    response_factory.register_response(
+    server_response_factory.register_response(
         response_type=response.response_type,
         parser=_parser,
         serializer=serializer,
         )
-    serialized_response = response_factory.serialize_response(response=response)
+    serialized_response = server_response_factory.serialize_response(response=response)
 
     http_response = application_client.post(
         response_endpoint.format(rule_id=rule_id),
@@ -184,7 +184,7 @@ def test_parse_failed_unknown_error(
 def test_set_response_serialization_failed(
         core_manager,
         response_endpoint,
-        response_factory,
+        server_response_factory,
         server_rule_prototype,
         server_response_prototype,
         application_client,
@@ -206,7 +206,7 @@ def test_set_response_serialization_failed(
     def _serializer(*args, **kwargs):
         raise ResponseError()
 
-    response_factory.register_response(
+    server_response_factory.register_response(
         response_type="ResponseError",
         parser=parser,
         serializer=_serializer,
@@ -234,7 +234,7 @@ def test_set_response_serialization_failed(
 def test_set_response_non_existent_rule(
         core_manager,
         response_endpoint,
-        response_factory,
+        server_response_factory,
         server_rule_prototype,
         registered_response_prototype,
         application_client,
@@ -249,7 +249,7 @@ def test_set_response_non_existent_rule(
     """
     core_manager.add_rule(server_rule_prototype)
 
-    serialized_response = response_factory.serialize_response(registered_response_prototype)
+    serialized_response = server_response_factory.serialize_response(registered_response_prototype)
     http_response = application_client.post(
         response_endpoint.format(rule_id="FakeID"),
         json=serialized_response,
@@ -264,7 +264,7 @@ def test_set_response_non_existent_rule(
 def test_get_response(
         core_manager,
         response_endpoint,
-        response_factory,
+        server_response_factory,
         server_rule_prototype,
         registered_response_prototype,
         application_client,
@@ -283,7 +283,7 @@ def test_get_response(
     http_response = application_client.get(response_endpoint.format(rule_id=rule_id))
     assert http_response.status_code == 200, "Wrong status code"
 
-    expected_data = response_factory.serialize_response(registered_response_prototype)
+    expected_data = server_response_factory.serialize_response(registered_response_prototype)
     assert http_response.json == build_response(data=expected_data), "Wrong response"
 
 
@@ -313,7 +313,7 @@ def test_get_response_non_existent_rule(
 def test_get_response_serialization_failed(
         core_manager,
         response_endpoint,
-        response_factory,
+        server_response_factory,
         server_rule_prototype,
         server_response_prototype,
         application_client,
@@ -337,7 +337,7 @@ def test_get_response_serialization_failed(
     def _serializer(*args, **kwargs):
         raise ResponseError()
 
-    response_factory.register_response(
+    server_response_factory.register_response(
         response_type=response.response_type,
         parser=parser,
         serializer=_serializer,
