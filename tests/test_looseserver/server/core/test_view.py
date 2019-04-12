@@ -4,7 +4,7 @@
 def test_view(
         base_endpoint,
         core_manager,
-        http_client,
+        managed_application_client,
         server_rule_prototype,
         server_response_prototype,
     ):
@@ -24,7 +24,7 @@ def test_view(
     rule_id = core_manager.add_rule(rule)
     core_manager.set_response(rule_id=rule_id, response=response)
 
-    http_response = http_client.get(base_endpoint)
+    http_response = managed_application_client.get(base_endpoint)
 
     assert http_response.status_code == 200, "Wrong status code"
     assert http_response.data == b"test body", "Wrong body"
@@ -33,7 +33,7 @@ def test_view(
 def test_reset_response(
         base_endpoint,
         core_manager,
-        http_client,
+        managed_application_client,
         server_rule_prototype,
         server_response_prototype,
     ):
@@ -67,7 +67,7 @@ def test_reset_response(
 
     core_manager.set_response(rule_id=rule_id, response=second_response)
 
-    http_response = http_client.get(base_endpoint)
+    http_response = managed_application_client.get(base_endpoint)
 
     assert not initial_implementation_triggered, "Initial response was triggered"
     assert http_response.status_code == 200, "Wrong status code"
@@ -77,7 +77,7 @@ def test_reset_response(
 def test_second_rule(
         base_endpoint,
         core_manager,
-        http_client,
+        managed_application_client,
         server_rule_prototype,
         server_response_prototype,
     ):
@@ -112,27 +112,27 @@ def test_second_rule(
         )
     core_manager.set_response(rule_id=match_rule_id, response=match_response)
 
-    http_response = http_client.get(base_endpoint)
+    http_response = managed_application_client.get(base_endpoint)
 
     assert implementation_triggered, "First rule was not checked"
     assert http_response.status_code == 200, "Wrong status code"
     assert http_response.data == b"Match response", "Wrong body"
 
 
-def test_no_rules(base_endpoint, http_client):
+def test_no_rules(base_endpoint, managed_application_client):
     """Check that 404 status is returned if no rule is configured.
 
     1. Make a request to a route.
     2. Check that 404 status is returned.
     """
-    http_response = http_client.get(base_endpoint)
+    http_response = managed_application_client.get(base_endpoint)
     assert http_response.status_code == 404, "Wrong response status"
 
 
 def test_no_matching_rule(
         base_endpoint,
         core_manager,
-        http_client,
+        managed_application_client,
         server_rule_prototype,
         server_response_prototype,
     ):
@@ -151,14 +151,14 @@ def test_no_matching_rule(
         )
     core_manager.set_response(rule_id=rule_id, response=response)
 
-    http_response = http_client.get(base_endpoint)
+    http_response = managed_application_client.get(base_endpoint)
     assert http_response.status_code == 404, "Wrong response status"
 
 
 def test_no_response(
         base_endpoint,
         core_manager,
-        http_client,
+        managed_application_client,
         server_rule_prototype,
         server_response_prototype,
     ):
@@ -178,7 +178,7 @@ def test_no_response(
         )
     core_manager.set_response(rule_id=second_rule_id, response=response)
 
-    http_response = http_client.get(base_endpoint)
+    http_response = managed_application_client.get(base_endpoint)
 
     assert http_response.status_code == 200, "Wrong status code"
     assert http_response.data == b"Response", "Wrong body"
@@ -187,7 +187,7 @@ def test_no_response(
 def test_exception_in_matching(
         base_endpoint,
         core_manager,
-        http_client,
+        managed_application_client,
         server_rule_prototype,
         server_response_prototype,
     ):
@@ -226,7 +226,7 @@ def test_exception_in_matching(
         )
     core_manager.set_response(rule_id=successful_rule_id, response=second_response)
 
-    http_response = http_client.get(base_endpoint)
+    http_response = managed_application_client.get(base_endpoint)
 
     assert implementation_triggered, "Exceptional rule was not triggered"
     assert http_response.status_code == 200, "Wrong status code"
@@ -236,7 +236,7 @@ def test_exception_in_matching(
 def test_exception_in_response_building(
         base_endpoint,
         core_manager,
-        http_client,
+        managed_application_client,
         server_rule_prototype,
         server_response_prototype,
     ):
@@ -272,7 +272,7 @@ def test_exception_in_response_building(
 
     core_manager.set_response(rule_id=successful_rule_id, response=successful_response)
 
-    http_response = http_client.get(base_endpoint)
+    http_response = managed_application_client.get(base_endpoint)
 
     assert implementation_triggered, "Exceptional response was not triggered"
     assert http_response.status_code == 200, "Wrong status code"
