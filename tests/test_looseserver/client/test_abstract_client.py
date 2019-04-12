@@ -4,30 +4,21 @@ import uuid
 from urllib.parse import urljoin
 
 from looseserver.client.abstract import AbstractClient
-from looseserver.client.rule import ClientRule
-from looseserver.client.response import ClientResponse
 
 
-def test_create_rule(rule_factory):
+def test_create_rule(client_rule_factory, registered_rule):
     """Check request data that client uses to create a rule.
 
-    1. Create a rule factory.
-    2. Create a subclass of the abstract client.
-    3. Implement send request so that it checks the request parameters.
-    4. Invoke the create_rule method.
-    5. Check the rule, returned by the method call.
+    1. Create a subclass of the abstract client.
+    2. Implement send request so that it checks the request parameters.
+    3. Invoke the create_rule method.
+    4. Check the rule, returned by the method call.
     """
-    rule = ClientRule(rule_type="test")
-    rule_factory.register_rule(
-        rule_type=rule.rule_type,
-        parser=lambda *args, **kwargs: ClientRule(rule_type=rule.rule_type),
-        serializer=lambda *args, **kwargs: {}
-        )
     rule_id = str(uuid.uuid4())
 
     class _Client(AbstractClient):
         def _send_request(self, url, method="GET", json=None):
-            serialized_rule = self._rule_factory.serialize_rule(rule=rule)
+            serialized_rule = self._rule_factory.serialize_rule(rule=registered_rule)
 
             assert url == "rules", "Wrong url"
             assert method == "POST", "Wrong method"
@@ -37,26 +28,19 @@ def test_create_rule(rule_factory):
             response_json.update(serialized_rule)
             return response_json
 
-    client = _Client(base_url="/", rule_factory=rule_factory)
-    created_rule = client.create_rule(rule=rule)
+    client = _Client(base_url="/", rule_factory=client_rule_factory)
+    created_rule = client.create_rule(rule=registered_rule)
     assert created_rule.rule_id == rule_id, "Rule ID has not been set"
 
 
-def test_get_rule(rule_factory):
+def test_get_rule(client_rule_factory, registered_rule):
     """Check request data that client uses to get a rule.
 
-    1. Create a rule factory.
-    2. Create a subclass of the abstract client.
-    3. Implement send request so that it checks the request parameters.
-    4. Invoke the get_rule method.
-    5. Check the rule, returned by the method call.
+    1. Create a subclass of the abstract client.
+    2. Implement send request so that it checks the request parameters.
+    3. Invoke the get_rule method.
+    4. Check the rule, returned by the method call.
     """
-    rule = ClientRule(rule_type="test")
-    rule_factory.register_rule(
-        rule_type=rule.rule_type,
-        parser=lambda *args, **kwargs: ClientRule(rule_type=rule.rule_type),
-        serializer=lambda *args, **kwargs: {}
-        )
     rule_id = str(uuid.uuid4())
 
     class _Client(AbstractClient):
@@ -66,10 +50,10 @@ def test_get_rule(rule_factory):
             assert json is None, "Data has been specified"
 
             response_json = {"rule_id": rule_id}
-            response_json.update(self._rule_factory.serialize_rule(rule=rule))
+            response_json.update(self._rule_factory.serialize_rule(rule=registered_rule))
             return response_json
 
-    client = _Client(base_url="/", rule_factory=rule_factory)
+    client = _Client(base_url="/", rule_factory=client_rule_factory)
     obtained_rule = client.get_rule(rule_id=rule_id)
     assert obtained_rule.rule_id == rule_id, "Rule ID has not been set"
 
@@ -93,26 +77,19 @@ def test_delete_rule():
     client.remove_rule(rule_id=rule_id)
 
 
-def test_set_response(response_factory):
+def test_set_response(client_response_factory, registered_response):
     """Check request data that client uses to set a response.
 
-    1. Create a response factory.
-    2. Create a subclass of the abstract client.
-    3. Implement send request so that it checks the request parameters.
-    4. Invoke the set_response method.
-    5. Check the response, returned by the method call.
+    1. Create a subclass of the abstract client.
+    2. Implement send request so that it checks the request parameters.
+    3. Invoke the set_response method.
+    4. Check the response, returned by the method call.
     """
-    response = ClientResponse(response_type="test")
-    response_factory.register_response(
-        response_type=response.response_type,
-        parser=lambda *args, **kwargs: response,
-        serializer=lambda *args, **kwargs: {}
-        )
     rule_id = str(uuid.uuid4())
 
     class _Client(AbstractClient):
         def _send_request(self, url, method="GET", json=None):
-            serialized_response = self._response_factory.serialize_response(response=response)
+            serialized_response = self._response_factory.serialize_response(registered_response)
 
             assert url == "response/{0}".format(rule_id), "Wrong url"
             assert method == "POST", "Wrong method"
@@ -120,10 +97,9 @@ def test_set_response(response_factory):
 
             return serialized_response
 
-    client = _Client(base_url="/", response_factory=response_factory)
-    assert client.set_response(rule_id=rule_id, response=response) is response, (
-        "Response is not returned"
-        )
+    client = _Client(base_url="/", response_factory=client_response_factory)
+    response = client.set_response(rule_id=rule_id, response=registered_response)
+    assert response.response_type == registered_response.response_type, "Wrong response is returned"
 
 
 def test_build_url():

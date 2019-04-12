@@ -7,19 +7,13 @@ import requests.sessions
 import pytest
 
 from looseserver.common.api import APIError
-from looseserver.default.common.constants import RuleType
-from looseserver.default.server.rule import create_rule_factory, MethodRule as ServerMethodRule
-from looseserver.server.application import configure_application
-from looseserver.client.rule import ClientRule
 from looseserver.client.http import HTTPClient
 
 
 @pytest.fixture
-def _redirect_requests(configuration_endpoint, monkeypatch):
+def _redirect_requests(application_factory, monkeypatch):
     """Redirect requests to the application module."""
-
-    application = configure_application(configuration_endpoint=configuration_endpoint)
-    application_client = application.test_client()
+    application_client = application_factory().test_client()
 
     def _patched_request(session, method, url, json=None):
         # pylint: disable=unused-argument
@@ -50,33 +44,18 @@ def _fail_requests(monkeypatch):
 
 def test_successful_request(
         _redirect_requests,
-        base_endpoint,
         configuration_endpoint,
-        rule_factory,
+        client_rule_factory,
+        registered_rule,
     ):
     """Check that http client can send a request and handle successful response.
 
-    1. Create a rule factory with method rule for the client.
-    2. Create a rule with the client.
-    3. Check the rule.
+    1. Create a rule with the client.
+    2. Check the rule.
     """
-    server_rule_factory = create_rule_factory(base_url=base_endpoint)
+    client = HTTPClient(base_url=configuration_endpoint, rule_factory=client_rule_factory)
 
-    rule_type = RuleType.METHOD.name
-
-    serialized_server_rule = server_rule_factory.serialize_rule(
-        rule=ServerMethodRule(rule_type=rule_type, method="GET"),
-        )
-
-    rule_factory.register_rule(
-        rule_type=rule_type,
-        parser=lambda *args, **kwargs: ClientRule(rule_type=rule_type),
-        serializer=lambda *args, **kwargs: serialized_server_rule["parameters"],
-        )
-
-    client = HTTPClient(base_url=configuration_endpoint, rule_factory=rule_factory)
-
-    created_rule = client.create_rule(rule=ClientRule(rule_type=rule_type))
+    created_rule = client.create_rule(rule=registered_rule)
     assert created_rule.rule_id is not None, "Rule ID has not been set"
 
 
