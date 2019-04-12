@@ -2,12 +2,11 @@
 
 from urllib.parse import urljoin
 
-from looseserver.server.application import configure_application
 from looseserver.default.common.constants import RuleType
 from looseserver.default.server.rule import create_rule_factory, PathRule, MethodRule, CompositeRule
 
 
-def test_create_rule_factory():
+def test_create_rule_factory(base_endpoint, configuration_endpoint, application_factory):
     """Check that default rules are registered in the default rule factory.
 
     1. Create default rule factory.
@@ -15,17 +14,10 @@ def test_create_rule_factory():
     3. Make a 3 POST-request to create a path, method and composite rules.
     4. Check that responses are successful.
     """
-    base_endpoint = "/base/"
-    configuration_endpoint = "/config/"
     rule_factory = create_rule_factory(base_url=base_endpoint)
 
-    application = configure_application(
-        base_endpoint=base_endpoint,
-        configuration_endpoint=configuration_endpoint,
-        rule_factory=rule_factory,
-        )
+    client = application_factory(rule_factory=rule_factory).test_client()
 
-    client = application.test_client()
     new_rule_endpoint = urljoin(configuration_endpoint, "rules")
 
     path_rule = PathRule(rule_type=RuleType.PATH.name, path="path")

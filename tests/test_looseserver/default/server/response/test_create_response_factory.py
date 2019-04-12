@@ -2,12 +2,16 @@
 
 from urllib.parse import urljoin
 
-from looseserver.server.application import configure_application
 from looseserver.default.common.constants import ResponseType
 from looseserver.default.server.response import create_response_factory, FixedResponse
 
 
-def test_create_response_factory(rule_factory, rule_match_all):
+def test_create_response_factory(
+        configuration_endpoint,
+        server_rule_factory,
+        application_factory,
+        rule_match_all,
+    ):
     """Check that default responses are registered in the default response factory.
 
     1. Create default response factory.
@@ -16,19 +20,13 @@ def test_create_response_factory(rule_factory, rule_match_all):
     4. Make a POST-request to set a fixed response for the rule.
     5. Check that responses are successful.
     """
-    configuration_endpoint = "/config/"
-
     response_factory = create_response_factory()
 
-    application = configure_application(
-        configuration_endpoint=configuration_endpoint,
-        rule_factory=rule_factory,
-        response_factory=response_factory,
-        )
-
+    application = application_factory(response_factory=response_factory)
     client = application.test_client()
 
-    serialized_rule = rule_factory.serialize_rule(rule=rule_match_all)
+    serialized_rule = server_rule_factory.serialize_rule(rule=rule_match_all)
+
     http_response = client.post(urljoin(configuration_endpoint, "rules"), json=serialized_rule)
     assert http_response.status_code == 200, "Can't create a rule"
 
