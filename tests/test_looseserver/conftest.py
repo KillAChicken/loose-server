@@ -23,18 +23,6 @@ def configuration_endpoint():
 
 
 @pytest.fixture
-def rule_factory():
-    """Rule factory."""
-    return RuleFactory()
-
-
-@pytest.fixture
-def response_factory():
-    """Response factory."""
-    return ResponseFactory()
-
-
-@pytest.fixture
 def server_rule_factory():
     """Custom rule factory for server."""
     return RuleFactory()
