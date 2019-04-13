@@ -1,7 +1,8 @@
 """Default client rules."""
 
-from looseserver.client.rule import ClientRule
 from looseserver.common.rule import RuleFactory
+from looseserver.client.rule import ClientRule
+from looseserver.server.application import DEFAULT_BASE_ENDPOINT
 from looseserver.default.common.constants import RuleType
 from looseserver.default.common.configuration import RuleFactoryPreparator
 
@@ -63,7 +64,7 @@ class CompositeRule(ClientRule):
             )
 
 
-def create_rule_factory(base_url):
+def create_rule_factory(base_url=DEFAULT_BASE_ENDPOINT):
     """Create and prepare rule factory.
 
     :param base_url: base url for dynamically configured routes.
