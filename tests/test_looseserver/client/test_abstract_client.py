@@ -6,7 +6,7 @@ from urllib.parse import urljoin
 from looseserver.client.abstract import AbstractClient
 
 
-def test_create_rule(client_rule_factory, registered_rule):
+def test_create_rule(client_rule_factory, client_response_factory, registered_rule):
     """Check request data that client uses to create a rule.
 
     1. Create a subclass of the abstract client.
@@ -28,12 +28,16 @@ def test_create_rule(client_rule_factory, registered_rule):
             response_json.update(serialized_rule)
             return response_json
 
-    client = _Client(base_url="/", rule_factory=client_rule_factory)
+    client = _Client(
+        configuration_url="/",
+        rule_factory=client_rule_factory,
+        response_factory=client_response_factory,
+        )
     created_rule = client.create_rule(rule=registered_rule)
     assert created_rule.rule_id == rule_id, "Rule ID has not been set"
 
 
-def test_get_rule(client_rule_factory, registered_rule):
+def test_get_rule(client_rule_factory, client_response_factory, registered_rule):
     """Check request data that client uses to get a rule.
 
     1. Create a subclass of the abstract client.
@@ -53,12 +57,16 @@ def test_get_rule(client_rule_factory, registered_rule):
             response_json.update(self._rule_factory.serialize_rule(rule=registered_rule))
             return response_json
 
-    client = _Client(base_url="/", rule_factory=client_rule_factory)
+    client = _Client(
+        configuration_url="/",
+        rule_factory=client_rule_factory,
+        response_factory=client_response_factory,
+        )
     obtained_rule = client.get_rule(rule_id=rule_id)
     assert obtained_rule.rule_id == rule_id, "Rule ID has not been set"
 
 
-def test_delete_rule():
+def test_delete_rule(client_rule_factory, client_response_factory):
     """Check request data that client uses to remove a rule.
 
     1. Create a subclass of the abstract client.
@@ -73,11 +81,15 @@ def test_delete_rule():
             assert method == "DELETE", "Wrong method"
             assert json is None, "Data has been specified"
 
-    client = _Client(base_url="/")
+    client = _Client(
+        configuration_url="/",
+        rule_factory=client_rule_factory,
+        response_factory=client_response_factory,
+        )
     client.remove_rule(rule_id=rule_id)
 
 
-def test_set_response(client_response_factory, registered_response):
+def test_set_response(client_rule_factory, client_response_factory, registered_response):
     """Check request data that client uses to set a response.
 
     1. Create a subclass of the abstract client.
@@ -97,12 +109,16 @@ def test_set_response(client_response_factory, registered_response):
 
             return serialized_response
 
-    client = _Client(base_url="/", response_factory=client_response_factory)
+    client = _Client(
+        configuration_url="/",
+        rule_factory=client_rule_factory,
+        response_factory=client_response_factory,
+        )
     response = client.set_response(rule_id=rule_id, response=registered_response)
     assert response.response_type == registered_response.response_type, "Wrong response is returned"
 
 
-def test_build_url():
+def test_build_url(client_rule_factory, client_response_factory):
     """Check method to build url.
 
     1. Create a subclass of the abstract client.
@@ -118,7 +134,11 @@ def test_build_url():
             return self._build_url(relative_url=relative_url)
 
     configuration_endpoint = "/config/"
-    client = _Client(base_url=configuration_endpoint)
+    client = _Client(
+        configuration_url=configuration_endpoint,
+        rule_factory=client_rule_factory,
+        response_factory=client_response_factory,
+        )
 
     relative_path = "test"
     expected_url = urljoin(configuration_endpoint, relative_path)

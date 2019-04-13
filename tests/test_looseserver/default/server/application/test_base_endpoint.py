@@ -27,7 +27,7 @@ def test_default_routes(
     client = FlaskClient(
         rule_factory=client_rule_factory,
         response_factory=client_response_factory,
-        base_url=DEFAULT_CONFIGURATION_ENDPOINT,
+        configuration_url=DEFAULT_CONFIGURATION_ENDPOINT,
         application_client=application.test_client(),
         )
 
@@ -76,7 +76,7 @@ def test_routes(
     client = FlaskClient(
         rule_factory=client_rule_factory,
         response_factory=client_response_factory,
-        base_url=DEFAULT_CONFIGURATION_ENDPOINT,
+        configuration_url=DEFAULT_CONFIGURATION_ENDPOINT,
         application_client=application.test_client(),
         )
 

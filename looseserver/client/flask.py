@@ -7,9 +7,9 @@ from looseserver.client.abstract import AbstractClient
 class FlaskClient(AbstractClient):
     """Class to configure a server as a flask application."""
 
-    def __init__(self, base_url, application_client, rule_factory=None, response_factory=None):
+    def __init__(self, configuration_url, application_client, rule_factory, response_factory):
         super(FlaskClient, self).__init__(
-            base_url=base_url,
+            configuration_url=configuration_url,
             rule_factory=rule_factory,
             response_factory=response_factory,
             )

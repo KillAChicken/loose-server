@@ -25,7 +25,7 @@ def configured_flask_client(
     ):
     """Configured flask client for the application with default factories."""
     return FlaskClient(
-        base_url=configuration_endpoint,
+        configuration_url=configuration_endpoint,
         rule_factory=client_rule_factory,
         response_factory=client_response_factory,
         application_client=default_factories_application.test_client(),

@@ -27,7 +27,7 @@ def test_default_configuration_endpoint(
     client = FlaskClient(
         rule_factory=client_rule_factory,
         response_factory=client_response_factory,
-        base_url=DEFAULT_CONFIGURATION_ENDPOINT,
+        configuration_url=DEFAULT_CONFIGURATION_ENDPOINT,
         application_client=application.test_client(),
         )
 
@@ -74,7 +74,7 @@ def test_configuration_endpoint(
     client = FlaskClient(
         rule_factory=client_rule_factory,
         response_factory=client_response_factory,
-        base_url=expected_endpoint,
+        configuration_url=expected_endpoint,
         application_client=application.test_client(),
         )
 

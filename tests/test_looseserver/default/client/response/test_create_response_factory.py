@@ -1,6 +1,6 @@
 """Test cases for creation of the default response factory."""
 
-from looseserver.default.client.rule import MethodRule
+from looseserver.default.client.rule import create_rule_factory, MethodRule
 from looseserver.default.client.response import create_response_factory, FixedResponse
 from looseserver.client.flask import FlaskClient
 
@@ -21,7 +21,8 @@ def test_create_response_factory(
     application_client = default_factories_application.test_client()
 
     client = FlaskClient(
-        base_url=configuration_endpoint,
+        configuration_url=configuration_endpoint,
+        rule_factory=create_rule_factory(base_url=base_endpoint),
         response_factory=create_response_factory(),
         application_client=application_client,
         )

@@ -4,7 +4,12 @@ from looseserver.default.client.rule import create_rule_factory, PathRule, Metho
 from looseserver.client.flask import FlaskClient
 
 
-def test_create_rule_factory(base_endpoint, configuration_endpoint, default_factories_application):
+def test_create_rule_factory(
+        base_endpoint,
+        configuration_endpoint,
+        client_response_factory,
+        default_factories_application,
+    ):
     """Check that default rules are registered in the default rule factory.
 
     1. Configure application with default rule factory.
@@ -15,8 +20,9 @@ def test_create_rule_factory(base_endpoint, configuration_endpoint, default_fact
     rule_factory = create_rule_factory(base_url=base_endpoint)
 
     client = FlaskClient(
-        base_url=configuration_endpoint,
+        configuration_url=configuration_endpoint,
         rule_factory=rule_factory,
+        response_factory=client_response_factory,
         application_client=default_factories_application.test_client(),
         )
 

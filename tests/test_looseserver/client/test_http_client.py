@@ -46,6 +46,7 @@ def test_successful_request(
         _redirect_requests,
         configuration_endpoint,
         client_rule_factory,
+        client_response_factory,
         registered_rule,
     ):
     """Check that http client can send a request and handle successful response.
@@ -53,19 +54,32 @@ def test_successful_request(
     1. Create a rule with the client.
     2. Check the rule.
     """
-    client = HTTPClient(base_url=configuration_endpoint, rule_factory=client_rule_factory)
+    client = HTTPClient(
+        configuration_url=configuration_endpoint,
+        rule_factory=client_rule_factory,
+        response_factory=client_response_factory,
+        )
 
     created_rule = client.create_rule(rule=registered_rule)
     assert created_rule.rule_id is not None, "Rule ID has not been set"
 
 
-def test_failed_request_api_error(_redirect_requests, configuration_endpoint):
+def test_failed_request_api_error(
+        _redirect_requests,
+        configuration_endpoint,
+        client_rule_factory,
+        client_response_factory,
+    ):
     """Check that http client can handle failed response with APIError.
 
     1. Try to get a non-existing rule with the client.
     2. Check that APIError is raised.
     """
-    client = HTTPClient(base_url=configuration_endpoint)
+    client = HTTPClient(
+        configuration_url=configuration_endpoint,
+        rule_factory=client_rule_factory,
+        response_factory=client_response_factory,
+        )
 
     with pytest.raises(APIError) as exception_info:
         client.get_rule(rule_id="FakeID")
@@ -75,13 +89,22 @@ def test_failed_request_api_error(_redirect_requests, configuration_endpoint):
         )
 
 
-def test_failed_request_http_error(_fail_requests, configuration_endpoint):
+def test_failed_request_http_error(
+        _fail_requests,
+        configuration_endpoint,
+        client_rule_factory,
+        client_response_factory,
+    ):
     """Check that http client can handle failed response with HTTPError.
 
     1. Try to get a rule with the client from the non-existing server.
     2. Check that HTTPError is raised.
     """
-    client = HTTPClient(base_url=configuration_endpoint)
+    client = HTTPClient(
+        configuration_url=configuration_endpoint,
+        rule_factory=client_rule_factory,
+        response_factory=client_response_factory,
+        )
 
     with pytest.raises(requests.HTTPError):
         client.get_rule(rule_id="FakeID")

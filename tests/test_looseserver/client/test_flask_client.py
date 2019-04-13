@@ -10,6 +10,7 @@ def test_successful_request(
         configuration_endpoint,
         application_factory,
         client_rule_factory,
+        client_response_factory,
         registered_rule,
     ):
     """Check that flask client can send a request and handle successful response.
@@ -20,8 +21,9 @@ def test_successful_request(
     application = application_factory()
 
     client = FlaskClient(
-        base_url=configuration_endpoint,
+        configuration_url=configuration_endpoint,
         rule_factory=client_rule_factory,
+        response_factory=client_response_factory,
         application_client=application.test_client(),
         )
 
@@ -29,7 +31,12 @@ def test_successful_request(
     assert created_rule.rule_id is not None, "Rule ID has not been set"
 
 
-def test_failed_request(configuration_endpoint, application_factory):
+def test_failed_request(
+        configuration_endpoint,
+        application_factory,
+        client_rule_factory,
+        client_response_factory,
+    ):
     """Check that flask client can handle failed response.
 
     1. Try to get a non-existing rule with the client.
@@ -38,7 +45,9 @@ def test_failed_request(configuration_endpoint, application_factory):
     application = application_factory()
 
     client = FlaskClient(
-        base_url=configuration_endpoint,
+        configuration_url=configuration_endpoint,
+        rule_factory=client_rule_factory,
+        response_factory=client_response_factory,
         application_client=application.test_client(),
         )
 

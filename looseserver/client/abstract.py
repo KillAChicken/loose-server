@@ -4,22 +4,13 @@ from abc import ABC, abstractmethod
 
 import urllib.parse as urlparse
 
-from looseserver.default.client.rule import create_rule_factory
-from looseserver.default.client.response import create_response_factory
-
 
 class AbstractClient(ABC):
     """Abstract class to manage configuration."""
 
-    def __init__(self, base_url, rule_factory=None, response_factory=None):
-        self._base_url = base_url
-
-        if rule_factory is None:
-            rule_factory = create_rule_factory(base_url=base_url)
+    def __init__(self, configuration_url, rule_factory, response_factory):
+        self._configuration_url = configuration_url
         self._rule_factory = rule_factory
-
-        if response_factory is None:
-            response_factory = create_response_factory()
         self._response_factory = response_factory
 
     def _build_url(self, relative_url):
@@ -28,7 +19,7 @@ class AbstractClient(ABC):
         :param relative_url: relative path of the endpoint.
         :returns: absolute url.
         """
-        return urlparse.urljoin(self._base_url, relative_url)
+        return urlparse.urljoin(self._configuration_url, relative_url)
 
     @abstractmethod
     def _send_request(self, url, method="GET", json=None):
