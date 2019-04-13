@@ -10,13 +10,18 @@ if __name__ == "__main__":
 
     setuptools.setup(
         name="loose-server",
-        version="0.3",
+        version="0.4",
         author="KillAChicken",
         author_email="KillAChicken@yandex.ru",
         description="Dynamically configurable server",
         long_description=long_description,
         url="https://github.com/KillAChicken/loose-server",
         packages=setuptools.find_packages(include=("looseserver*", )),
+        install_requires=[
+            "Flask",
+            "flask-restful",
+            "requests",
+            ],
         classifiers=[
             "License :: OSI Approved :: MIT License",
             "Operating System :: OS Independent",
