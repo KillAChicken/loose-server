@@ -1,12 +1,9 @@
-"""Module to start loose server."""
+"""Module to start loose server with default configuration."""
 
 import argparse
 
-from looseserver.server.application import (
-    configure_application,
-    DEFAULT_BASE_ENDPOINT,
-    DEFAULT_CONFIGURATION_ENDPOINT,
-    )
+from looseserver.server.application import DEFAULT_BASE_ENDPOINT, DEFAULT_CONFIGURATION_ENDPOINT
+from looseserver.default.server.application import configure_application
 
 
 def _parse_args():

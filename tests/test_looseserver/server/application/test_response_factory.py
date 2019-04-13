@@ -10,45 +10,6 @@ from looseserver.server.application import (
     DEFAULT_BASE_ENDPOINT,
     DEFAULT_CONFIGURATION_ENDPOINT,
     )
-from looseserver.default.common.constants import ResponseType
-from looseserver.default.server.response import create_response_factory, FixedResponse
-
-
-def test_default_response_factory(server_rule_factory, registered_match_all_rule):
-    """Check that default response factory is used if custom one is not specified.
-
-    1. Configure application without specifying response factory.
-    2. Create a univeral rule to match every request.
-    3. Make a POST-request to set a fixed response for the rule.
-    4. Check that response is successful.
-    5. Make a request to the base url.
-    6. Check the response.
-    """
-    application = configure_application(rule_factory=server_rule_factory)
-    client = application.test_client()
-
-    serialized_rule = server_rule_factory.serialize_rule(registered_match_all_rule)
-    http_response = client.post(
-        urljoin(DEFAULT_CONFIGURATION_ENDPOINT, "rules"),
-        json=serialized_rule,
-        )
-    rule_id = http_response.json["data"]["rule_id"]
-
-    default_response_factory = create_response_factory()
-    response = FixedResponse(
-        response_type=ResponseType.FIXED.name,
-        status=200,
-        headers={},
-        body="body",
-        )
-    serialized_response = default_response_factory.serialize_response(response=response)
-
-    http_response = client.post(
-        urljoin(DEFAULT_CONFIGURATION_ENDPOINT, "response/{0}".format(rule_id)),
-        json=serialized_response,
-        )
-    assert http_response.status_code == 200, "Can't set a response"
-    assert client.put(DEFAULT_BASE_ENDPOINT).data == b"body"
 
 
 def test_response_factory(

@@ -2,7 +2,7 @@
 
 import pytest
 
-from looseserver.server.application import configure_application
+from looseserver.default.server.application import configure_application
 from looseserver.client.flask import FlaskClient
 
 

@@ -5,10 +5,9 @@ import urllib.parse as urlparse
 from flask import Flask
 from flask_restful import Api
 
+from looseserver.common.utils import ensure_endpoint
 from looseserver.server.core import Manager
 from looseserver.server.api import RulesManager, Rule, Response
-from looseserver.default.server.rule import create_rule_factory
-from looseserver.default.server.response import create_response_factory
 
 
 DEFAULT_BASE_ENDPOINT = "/routes/"
@@ -16,28 +15,23 @@ DEFAULT_CONFIGURATION_ENDPOINT = "/_configuration/"
 
 
 def configure_application(
+        rule_factory,
+        response_factory,
         base_endpoint=DEFAULT_BASE_ENDPOINT,
         configuration_endpoint=DEFAULT_CONFIGURATION_ENDPOINT,
-        rule_factory=None,
-        response_factory=None,
     ):
     """Configure application.
 
-    :param base_endpoint: string with base endpoint for configured routes.
-    :param configuration_endpoint: string with endpoint to configure routes.
     :param rule_factory: :class:`RuleFactory <looseserver.common.rule.RuleFactory>`
         to parse and serialize rules.
     :param response_factory: :class:`ResponseFactory <looseserver.common.response.ResponseFactory>`
         to parse and serialize responses.
+    :param base_endpoint: string with base endpoint for configured routes.
+    :param configuration_endpoint: string with endpoint to configure routes.
     :returns: flask.Flask object.
     """
-    base_endpoint = _ensure_endpoint(base_endpoint)
-    configuration_endpoint = _ensure_endpoint(configuration_endpoint)
-
-    if rule_factory is None:
-        rule_factory = create_rule_factory(base_endpoint)
-    if response_factory is None:
-        response_factory = create_response_factory()
+    base_endpoint = ensure_endpoint(base_endpoint)
+    configuration_endpoint = ensure_endpoint(configuration_endpoint)
 
     core_manager = Manager(base=base_endpoint)
 
@@ -80,15 +74,3 @@ def configure_application(
         )
 
     return application
-
-
-def _ensure_endpoint(endpoint):
-    """Ensure that endpoint starts and ends with slashes.
-
-    :param endpoint: string endpoint.
-    :returns: the same string starting and ending with slashes.
-    """
-    ensured_endpoint = urlparse.urljoin("/", endpoint)
-    if not ensured_endpoint.endswith("/"):
-        ensured_endpoint += "/"
-    return ensured_endpoint
