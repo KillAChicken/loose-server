@@ -7,17 +7,12 @@ Loose server is a simple configurable server. It can be used to create temporary
 
 Installation
 ============
-``Flask`` and ``flask-restful`` are required for the server.
 
 .. code-block:: text
 
-    $ python -m pip install Flask flask-restful loose-server
+    $ python -m pip install loose-server
 
-``requests`` are required for the http client.
-
-.. code-block:: text
-
-    $ python -m pip install requests loose-server
+Additional packages will be installed: ``Flask``, ``flask-restful`` (required for the server) and ``requests`` (required for the http clients).
 
 Usage
 =====
@@ -32,8 +27,8 @@ A server can be started by the command
 
 .. code-block:: text
 
-    $ python -m looseserver.server.run
-     * Serving Flask app "run" (lazy loading)
+    $ python -m looseserver.default.server.run
+     * Serving Flask app "looseserver" (lazy loading)
      * Environment: production
        WARNING: Do not use the development server in a production environment.
        Use a production WSGI server instead.
@@ -44,11 +39,11 @@ API endpoints are nested to the base configuration url. By default it is ``/_con
 
 .. code-block:: python
 
-    from looseserver.client.http import HTTPClient
     from looseserver.default.client.rule import PathRule
     from looseserver.default.client.response import FixedResponse
+    from looseserver.default.client.http import HTTPClient
 
-    client = HTTPClient(base_url="http://127.0.0.1:50000/_configuration/")
+    client = HTTPClient(configuration_url="http://127.0.0.1:50000/_configuration/")
 
     path_rule_spec = PathRule(path="example")
     path_rule = client.create_rule(rule=path_rule_spec)
@@ -80,19 +75,22 @@ Loose server can be used as a mock server in the following way
 
 .. code-block:: python
 
-    from looseserver.server.application import configure_application
-    from looseserver.client.flask import FlaskClient
+    from urllib.parse import urljoin
+
+    from looseserver.server.application import DEFAULT_BASE_ENDPOINT, DEFAULT_CONFIGURATION_ENDPOINT
+    from looseserver.default.server.application import configure_application
+    from looseserver.default.client.flask import FlaskClient
     from looseserver.default.client.rule import PathRule
     from looseserver.default.client.response import FixedResponse
 
-    application = configure_application(
-        base_endpoint="/routes/",
-        configuration_endpoint="/_configuration/",
-        )
+    application = configure_application()
 
     app_client=application.test_client()
 
-    client = FlaskClient(base_url="/_configuration/", application_client=app_client)
+    client = FlaskClient(
+        configuration_url=DEFAULT_CONFIGURATION_ENDPOINT,
+        application_client=app_client,
+        )
 
     path_rule_spec = PathRule(path="example")
     path_rule = client.create_rule(rule=path_rule_spec)
@@ -104,6 +102,6 @@ Loose server can be used as a mock server in the following way
         )
     client.set_response(rule_id=path_rule.rule_id, response=json_response)
 
-    response = app_client.get("/routes/example")
+    response = app_client.get(urljoin(DEFAULT_BASE_ENDPOINT, "example"))
     assert response.headers["Content-Type"] == "application/json"
     assert response.json == {'key': 'value'}
