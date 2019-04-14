@@ -6,10 +6,10 @@ from looseserver.server.application import DEFAULT_BASE_ENDPOINT, DEFAULT_CONFIG
 from looseserver.default.server.application import configure_application
 
 
-def _parse_args():
-    """Parse commandline arguments.
+def create_parser():
+    """Create argument parser.
 
-    :returns: argparse namespace.
+    :returns: instance of argparse.ArgumentParser.
     """
     parser = argparse.ArgumentParser(description="Loose server")
     parser.add_argument("--host", default="127.0.0.1", dest="host", help="Host to bind")
@@ -26,20 +26,21 @@ def _parse_args():
         dest="base_endpoint",
         help="Base endpoint for configured routes",
         )
-    return parser.parse_args()
+
+    return parser
 
 
-def _run():
+def _run(commandline_arguments=None):
     """Entrypoint to run a loose server."""
-    args = _parse_args()
+    if __name__ == "__main__":
+        parser = create_parser()
+        arguments = parser.parse_args(commandline_arguments)
+        application = configure_application(
+            base_endpoint=arguments.base_endpoint,
+            configuration_endpoint=arguments.configuration_endpoint,
+            )
 
-    application = configure_application(
-        base_endpoint=args.base_endpoint,
-        configuration_endpoint=args.configuration_endpoint,
-        )
-
-    application.run(host=args.host, port=args.port)
+        application.run(host=arguments.host, port=arguments.port)
 
 
-if __name__ == "__main__":
-    _run()
+_run()
