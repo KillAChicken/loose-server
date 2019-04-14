@@ -36,7 +36,44 @@ def test_prepare_path_rule(server_rule_factory):
 
     assert isinstance(parsed_rule, _PathRule), "Wrong type of the rule"
     assert parsed_rule.rule_type == RuleType.PATH.name, "Wrong rule type"
+
+
+def test_path_with_base_url(server_rule_factory):
+    """Check that parser adds base url if it was specified.
+
+    1. Create preparator for a rule factory.
+    2. Prepare path rule with custom base url.
+    3. Serialize new rule.
+    4. Parse serialized data.
+    5. Check parsed rule path.
+    """
+    preparator = RuleFactoryPreparator(server_rule_factory)
+    base_url = "/base/"
+    preparator.prepare_path_rule(path_rule_class=_PathRule, base_url=base_url)
+
+    path = "test-path"
+    rule = _PathRule(path=path, rule_type=RuleType.PATH.name)
+    serialized_rule = server_rule_factory.serialize_rule(rule=rule)
+    parsed_rule = server_rule_factory.parse_rule(data=serialized_rule)
     assert parsed_rule.path == urljoin(base_url, path), "Wrong path"
+
+
+def test_path_without_base_url(server_rule_factory):
+    """Check that parser does not add base url if it was not specified.
+
+    1. Create preparator for a rule factory.
+    2. Prepare path rule without specifying base url.
+    3. Serialize new rule.
+    4. Parse serialized data.
+    5. Check parsed rule path.
+    """
+    preparator = RuleFactoryPreparator(server_rule_factory)
+    preparator.prepare_path_rule(path_rule_class=_PathRule)
+
+    rule = _PathRule(path="path", rule_type=RuleType.PATH.name)
+    serialized_rule = server_rule_factory.serialize_rule(rule=rule)
+    parsed_rule = server_rule_factory.parse_rule(data=serialized_rule)
+    assert parsed_rule.path == rule.path, "Wrong path"
 
 
 def test_parse_missing_path(server_rule_factory):

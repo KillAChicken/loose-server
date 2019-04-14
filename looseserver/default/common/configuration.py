@@ -15,7 +15,7 @@ class RuleFactoryPreparator:
     def __init__(self, rule_factory):
         self._rule_factory = rule_factory
 
-    def prepare_path_rule(self, path_rule_class, base_url):
+    def prepare_path_rule(self, path_rule_class, base_url=None):
         """Prepare path rule in the rule factory.
 
         :param path_rule_class: class of the path rule.
@@ -34,7 +34,11 @@ class RuleFactoryPreparator:
                 message = "Rule parameters must be a dictionary with 'path' key"
                 raise RuleParseError(message) from error
 
-            path = urljoin(base_url, relative_path)
+            if base_url is None:
+                path = relative_path
+            else:
+                path = urljoin(base_url, relative_path)
+
             return path_rule_class(rule_type=rule_type, path=path)
 
         def _serializer(rule_type, rule):

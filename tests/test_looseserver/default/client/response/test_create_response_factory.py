@@ -22,7 +22,7 @@ def test_create_response_factory(
 
     client = FlaskClient(
         configuration_url=configuration_endpoint,
-        rule_factory=create_rule_factory(base_url=base_endpoint),
+        rule_factory=create_rule_factory(),
         response_factory=create_response_factory(),
         application_client=application_client,
         )

@@ -1,14 +1,10 @@
 """Test cases for creation of the default rule factory."""
 
-from urllib.parse import urljoin
-
-from looseserver.server.application import DEFAULT_BASE_ENDPOINT
 from looseserver.client.flask import FlaskClient
 from looseserver.default.client.rule import create_rule_factory, PathRule, MethodRule, CompositeRule
 
 
 def test_create_rule_factory(
-        base_endpoint,
         configuration_endpoint,
         client_response_factory,
         default_factories_application,
@@ -20,7 +16,7 @@ def test_create_rule_factory(
     3. Create a path, method and composite rules with the client.
     4. Check that responses are successful.
     """
-    rule_factory = create_rule_factory(base_url=base_endpoint)
+    rule_factory = create_rule_factory()
 
     client = FlaskClient(
         configuration_url=configuration_endpoint,
@@ -43,27 +39,9 @@ def test_create_rule_factory(
 
 
 def test_base_url():
-    """Check that default path rule is configured with the specified base url.
+    """Check that base url is not added to the path rule.
 
-    1. Create default rule factory with specified base url.
-    2. Serialize a path rule with relative path.
-    3. Parse serialized rule.
-    4. Check the path of the parsed rule.
-    """
-    base_url = "/base/"
-    rule_factory = create_rule_factory(base_url=base_url)
-
-    rule = PathRule(path="path")
-    serialized_rule = rule_factory.serialize_rule(rule=rule)
-    parsed_rule = rule_factory.parse_rule(data=serialized_rule)
-
-    assert parsed_rule.path == urljoin(base_url, rule.path), "Wrong path"
-
-
-def test_default_base_url():
-    """Check that default path rule is configured with the default base url if None was specified.
-
-    1. Create default rule factory without specifying base url.
+    1. Create default rule factory.
     2. Serialize a path rule with relative path.
     3. Parse serialized rule.
     4. Check the path of the parsed rule.
@@ -74,4 +52,4 @@ def test_default_base_url():
     serialized_rule = rule_factory.serialize_rule(rule=rule)
     parsed_rule = rule_factory.parse_rule(data=serialized_rule)
 
-    assert parsed_rule.path == urljoin(DEFAULT_BASE_ENDPOINT, rule.path), "Wrong path"
+    assert parsed_rule.path == rule.path, "Wrong path"
