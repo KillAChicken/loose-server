@@ -9,10 +9,7 @@ import pytest
 @pytest.fixture
 def rule_match_all(server_rule_factory, server_rule_prototype):
     """Registered rule that matches every request."""
-    rule = server_rule_prototype.create_new(
-        rule_type="MATCHALL",
-        match_implementation=lambda *args, **kwargs: True,
-        )
+    rule = server_rule_prototype.create_new(rule_type="MATCHALL", match_implementation=True)
 
     server_rule_factory.register_rule(
         rule_type=rule.rule_type,

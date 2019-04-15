@@ -77,10 +77,7 @@ def test_custom_factories(
 
     rule_type = "".join(random.choice(string.ascii_uppercase) for _ in range(5))
 
-    server_rule = server_rule_prototype.create_new(
-        rule_type=rule_type,
-        match_implementation=lambda *args, **kwargs: True,
-        )
+    server_rule = server_rule_prototype.create_new(rule_type=rule_type, match_implementation=True)
     server_rule_factory.register_rule(
         rule_type=rule_type,
         parser=lambda *args, **kwargs: server_rule,
@@ -97,7 +94,7 @@ def test_custom_factories(
 
     server_response = server_response_prototype.create_new(
         response_type=response_type,
-        builder_implementation=lambda *args, **kwargs: "",
+        builder_implementation="",
         )
 
     server_response_factory.register_response(

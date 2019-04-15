@@ -16,7 +16,7 @@ def apply_rule(
     """Callable that creates a specified rule and sets successful response for it."""
     response = server_response_prototype.create_new(
         response_type="RESPONSE200",
-        builder_implementation=lambda *args, **kwargs: b""
+        builder_implementation=b""
         )
 
     server_response_factory.register_response(

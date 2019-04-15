@@ -15,13 +15,9 @@ def test_view(
     3. Make a request.
     4. Check that the configured response was returned.
     """
-    rule = server_rule_prototype.create_new(match_implementation=lambda *args, **kwargs: True)
+    rule_id = core_manager.add_rule(server_rule_prototype.create_new(match_implementation=True))
 
-    response = server_response_prototype.create_new(
-        builder_implementation=lambda *args, **kwargs: b"test body"
-        )
-
-    rule_id = core_manager.add_rule(rule)
+    response = server_response_prototype.create_new(builder_implementation=b"test body")
     core_manager.set_response(rule_id=rule_id, response=response)
 
     http_response = managed_application_client.get(base_endpoint)
@@ -45,8 +41,7 @@ def test_reset_response(
     4. Make a request.
     5. Check that new response is returned.
     """
-    rule = server_rule_prototype.create_new(match_implementation=lambda *args, **kwargs: True)
-    rule_id = core_manager.add_rule(rule=rule)
+    rule_id = core_manager.add_rule(server_rule_prototype.create_new(match_implementation=True))
 
     initial_implementation_triggered = False
     def _initial_builder_implementation(*args, **kwargs):
@@ -58,17 +53,14 @@ def test_reset_response(
     first_response = server_response_prototype.create_new(
         builder_implementation=_initial_builder_implementation,
         )
-
     core_manager.set_response(rule_id=rule_id, response=first_response)
 
     second_response = server_response_prototype.create_new(
-        builder_implementation=lambda *args, **kwargs: b"Second response",
+        builder_implementation=b"Second response",
         )
-
     core_manager.set_response(rule_id=rule_id, response=second_response)
 
     http_response = managed_application_client.get(base_endpoint)
-
     assert not initial_implementation_triggered, "Initial response was triggered"
     assert http_response.status_code == 200, "Wrong status code"
     assert http_response.data == b"Second response", "Wrong body"
@@ -99,21 +91,20 @@ def test_second_rule(
     no_match_rule = server_rule_prototype.create_new(match_implementation=_no_match_implementation)
     no_match_rule_id = core_manager.add_rule(rule=no_match_rule)
 
-    match_rule = server_rule_prototype.create_new(match_implementation=lambda *args, **kwargs: True)
+    match_rule = server_rule_prototype.create_new(match_implementation=True)
     match_rule_id = core_manager.add_rule(rule=match_rule)
 
     no_match_response = server_response_prototype.create_new(
-        builder_implementation=lambda *args, **kwargs: b"No match response",
+        builder_implementation=b"No match response",
         )
     core_manager.set_response(rule_id=no_match_rule_id, response=no_match_response)
 
     match_response = server_response_prototype.create_new(
-        builder_implementation=lambda *args, **kwargs: b"Match response",
+        builder_implementation=b"Match response",
         )
     core_manager.set_response(rule_id=match_rule_id, response=match_response)
 
     http_response = managed_application_client.get(base_endpoint)
-
     assert implementation_triggered, "First rule was not checked"
     assert http_response.status_code == 200, "Wrong status code"
     assert http_response.data == b"Match response", "Wrong body"
@@ -143,12 +134,9 @@ def test_no_matching_rule(
     3. Make a request.
     4. Check that 404 status is returned.
     """
-    rule = server_rule_prototype.create_new(match_implementation=lambda *args, **kwargs: False)
-    rule_id = core_manager.add_rule(rule=rule)
+    rule_id = core_manager.add_rule(server_rule_prototype.create_new(match_implementation=False))
 
-    response = server_response_prototype.create_new(
-        builder_implementation=lambda *args, **kwargs: b"",
-        )
+    response = server_response_prototype.create_new(builder_implementation=b"")
     core_manager.set_response(rule_id=rule_id, response=response)
 
     http_response = managed_application_client.get(base_endpoint)
@@ -169,17 +157,14 @@ def test_no_response(
     3. Make a request.
     4. Check that response is succesfully obtained.
     """
-    rule = server_rule_prototype.create_new(match_implementation=lambda *args, **kwargs: True)
+    rule = server_rule_prototype.create_new(match_implementation=True)
     core_manager.add_rule(rule=rule)
     second_rule_id = core_manager.add_rule(rule=rule)
 
-    response = server_response_prototype.create_new(
-        builder_implementation=lambda *args, **kwargs: b"Response",
-        )
+    response = server_response_prototype.create_new(builder_implementation=b"Response")
     core_manager.set_response(rule_id=second_rule_id, response=response)
 
     http_response = managed_application_client.get(base_endpoint)
-
     assert http_response.status_code == 200, "Wrong status code"
     assert http_response.data == b"Response", "Wrong body"
 
@@ -211,23 +196,18 @@ def test_exception_in_matching(
         )
     exceptional_rule_id = core_manager.add_rule(rule=exceptional_rule)
 
-    successful_rule = server_rule_prototype.create_new(
-        match_implementation=lambda *args, **kwargs: True,
-        )
+    successful_rule = server_rule_prototype.create_new(match_implementation=True)
     successful_rule_id = core_manager.add_rule(rule=successful_rule)
 
-    first_response = server_response_prototype.create_new(
-        builder_implementation=lambda *args, **kwargs: b"First response"
-        )
+    first_response = server_response_prototype.create_new(builder_implementation=b"First response")
     core_manager.set_response(rule_id=exceptional_rule_id, response=first_response)
 
     second_response = server_response_prototype.create_new(
-        builder_implementation=lambda *args, **kwargs: b"Second response"
+        builder_implementation=b"Second response",
         )
     core_manager.set_response(rule_id=successful_rule_id, response=second_response)
 
     http_response = managed_application_client.get(base_endpoint)
-
     assert implementation_triggered, "Exceptional rule was not triggered"
     assert http_response.status_code == 200, "Wrong status code"
     assert http_response.data == b"Second response", "Wrong body"
@@ -248,7 +228,7 @@ def test_exception_in_response_building(
     4. Make a request.
     5. Check that response, build for the second rule, is returned.
     """
-    rule = server_rule_prototype.create_new(match_implementation=lambda *args, **kwargs: True)
+    rule = server_rule_prototype.create_new(match_implementation=True)
     exceptional_rule_id = core_manager.add_rule(rule=rule)
     successful_rule_id = core_manager.add_rule(rule=rule)
 
@@ -262,18 +242,14 @@ def test_exception_in_response_building(
     exceptional_response = server_response_prototype.create_new(
         builder_implementation=_exceptional_builder_implementation,
         )
-
     core_manager.set_response(rule_id=exceptional_rule_id, response=exceptional_response)
 
-    successful_builder_implementation = lambda *args, **kwargs: b"Successful response"
     successful_response = server_response_prototype.create_new(
-        builder_implementation=successful_builder_implementation,
+        builder_implementation=b"Successful response",
         )
-
     core_manager.set_response(rule_id=successful_rule_id, response=successful_response)
 
     http_response = managed_application_client.get(base_endpoint)
-
     assert implementation_triggered, "Exceptional response was not triggered"
     assert http_response.status_code == 200, "Wrong status code"
     assert http_response.data == b"Successful response", "Wrong body"

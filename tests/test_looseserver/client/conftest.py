@@ -12,10 +12,7 @@ def registered_rule(server_rule_factory, client_rule_factory, server_rule_protot
     rule_type = "CLIENT_RULE"
 
     def _create_server_rule():
-        return server_rule_prototype.create_new(
-            rule_type=rule_type,
-            match_implementation=lambda *args, **kwargs: True,
-            )
+        return server_rule_prototype.create_new(rule_type=rule_type, match_implementation=True)
 
     server_rule_factory.register_rule(
         rule_type=rule_type,
@@ -44,7 +41,7 @@ def registered_response(
     def _create_server_response():
         return server_response_prototype.create_new(
             response_type=response_type,
-            builder_implementation=lambda *args, **kwargs: b"body",
+            builder_implementation=b"body",
             )
 
     server_response_factory.register_response(

@@ -86,8 +86,9 @@ def server_rule_prototype():
         def __init__(self, rule_type="test", match_implementation=None):
             super(ConfigurableRule, self).__init__(rule_type=rule_type)
 
-            if match_implementation is None:
-                match_implementation = lambda *args, **kwargs: None
+            if not callable(match_implementation):
+                value = match_implementation
+                match_implementation = lambda *args, **kwargs: value
 
             self.match_implementation = match_implementation
 
@@ -117,8 +118,9 @@ def server_response_prototype():
         def __init__(self, response_type="test", builder_implementation=None):
             super(ConfigurableResponse, self).__init__(response_type=response_type)
 
-            if builder_implementation is None:
-                builder_implementation = lambda *args, **kwargs: None
+            if not callable(builder_implementation):
+                value = builder_implementation
+                builder_implementation = lambda *args, **kwargs: value
 
             self.builder_implementation = builder_implementation
 

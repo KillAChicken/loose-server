@@ -10,10 +10,7 @@ def registered_match_all_rule(server_rule_factory, server_rule_prototype):
     rule_type = "MATCH_ALL"
 
     def _create_rule():
-        return server_rule_prototype.create_new(
-            rule_type=rule_type,
-            match_implementation=lambda *args, **kwargs: True,
-            )
+        return server_rule_prototype.create_new(rule_type=rule_type, match_implementation=True)
 
     server_rule_factory.register_rule(
         rule_type=rule_type,
@@ -42,7 +39,7 @@ def registered_success_response(
     def _create_response():
         return server_response_prototype.create_new(
             response_type=response_type,
-            builder_implementation=lambda *args, **kwargs: registered_response_data,
+            builder_implementation=registered_response_data,
             )
 
     server_response_factory.register_response(

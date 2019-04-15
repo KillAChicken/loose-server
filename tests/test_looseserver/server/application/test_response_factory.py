@@ -46,7 +46,7 @@ def test_response_factory(
     response_type = "".join(random.choice(string.ascii_uppercase) for _ in range(10))
     response = server_response_prototype.create_new(
         response_type=response_type,
-        builder_implementation=lambda *args, **kwargs: b"body",
+        builder_implementation=b"body",
         )
 
     response_factory.register_response(
