@@ -14,8 +14,12 @@ Installation
 
 Additional packages will be installed: ``Flask``, ``flask-restful`` (required for the server) and ``requests`` (required for the http clients).
 
-Usage
-=====
+Documentation
+=============
+Documentation for the package can be found on the `Wiki <https://github.com/KillAChicken/loose-server/wiki>`_.
+
+Quickstart
+==========
 Loose server has 2 variations:
 
 - Standalone server with API to manage rules via HTTP.
@@ -45,8 +49,7 @@ API endpoints are nested to the base configuration url. By default it is ``/_con
 
     client = HTTPClient(configuration_url="http://127.0.0.1:50000/_configuration/")
 
-    path_rule_spec = PathRule(path="example")
-    path_rule = client.create_rule(rule=path_rule_spec)
+    path_rule = client.create_rule(rule=PathRule(path="example"))
 
     json_response = FixedResponse(
         status=200,
@@ -75,25 +78,17 @@ Loose server can be used as a mock server in the following way
 
 .. code-block:: python
 
-    from urllib.parse import urljoin
-
-    from looseserver.server.application import DEFAULT_BASE_ENDPOINT, DEFAULT_CONFIGURATION_ENDPOINT
     from looseserver.default.server.application import configure_application
     from looseserver.default.client.flask import FlaskClient
     from looseserver.default.client.rule import PathRule
     from looseserver.default.client.response import FixedResponse
 
-    application = configure_application()
-
+    application = configure_application(base_endpoint="/base/", configuration_endpoint="/config/")
     app_client=application.test_client()
 
-    client = FlaskClient(
-        configuration_url=DEFAULT_CONFIGURATION_ENDPOINT,
-        application_client=app_client,
-        )
+    client = FlaskClient(configuration_url="/config/", application_client=app_client)
 
-    path_rule_spec = PathRule(path="example")
-    path_rule = client.create_rule(rule=path_rule_spec)
+    path_rule = client.create_rule(rule=PathRule(path="example"))
 
     json_response = FixedResponse(
         status=200,
@@ -102,6 +97,6 @@ Loose server can be used as a mock server in the following way
         )
     client.set_response(rule_id=path_rule.rule_id, response=json_response)
 
-    response = app_client.get(urljoin(DEFAULT_BASE_ENDPOINT, "example"))
+    response = app_client.get("/base/example")
     assert response.headers["Content-Type"] == "application/json"
     assert response.json == {'key': 'value'}
