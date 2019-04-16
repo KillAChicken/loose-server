@@ -10,7 +10,7 @@ if __name__ == "__main__":
 
     setuptools.setup(
         name="loose-server",
-        version="0.4",
+        version="0.5",
         author="KillAChicken",
         author_email="KillAChicken@yandex.ru",
         description="Dynamically configurable server",
