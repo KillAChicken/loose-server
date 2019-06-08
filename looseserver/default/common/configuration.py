@@ -170,8 +170,8 @@ class ResponseFactoryPreparator:
             """Create fixed response.
 
             :param response_type: type of the response.
-            :param parameters: dictionary with parameters of the rule.
-            :returns: instance of configured composite rule class.
+            :param parameters: dictionary with parameters of the response.
+            :returns: instance of configured fixed response class.
             """
             try:
                 encoded_body = parameters["body"]
